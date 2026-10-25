@@ -305,5 +305,42 @@ namespace MouseControl.Tests
             settings.DpiNotificationAlert = false;
             notifier.ProcessDpiUpdate(4, 2400);
         }
+
+        [Theory]
+        [InlineData(0, false)]
+        [InlineData(1, false)] // No hardware connected in unit test environment, safely returns false
+        [InlineData(6, false)]
+        [InlineData(7, false)]
+        [InlineData(-1, false)]
+        public void SendActiveDpiStage_ValidatesRangeAndGracefullyHandlesHeadless(int stage, bool expected)
+        {
+            using var driver = new MouseDriver();
+            bool result = driver.SendActiveDpiStage(stage);
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void SendSensorConfiguration_NullSettings_ReturnsFalse()
+        {
+            using var driver = new MouseDriver();
+            bool result = driver.SendSensorConfiguration(null!);
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void SendSensorConfiguration_ValidSettings_GracefullyExecutesInHeadless()
+        {
+            using var driver = new MouseDriver();
+            var settings = new AppSettings
+            {
+                SensorActiveDpiStage = 2,
+                SensorDpiStages = new int[] { 400, 800, 1600, 2400, 3200, 6400 },
+                SensorPollingRate = 1000,
+                SensorLod = "1mm"
+            };
+            bool result = driver.SendSensorConfiguration(settings);
+            // Returns false cleanly in headless environment without crashing
+            Assert.False(result);
+        }
     }
 }

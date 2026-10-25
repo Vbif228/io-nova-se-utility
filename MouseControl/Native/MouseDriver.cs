@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using MouseControl.Models;
 
 namespace MouseControl.Native
 {
@@ -20,6 +21,15 @@ namespace MouseControl.Native
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private delegate int Close_DevMonitor_Delegate();
 
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int Open_FeatureDevice_Delegate();
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int Close_FeatureDevice_Delegate();
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int SetFeature_Delegate(IntPtr buffer, int length);
+
         private const uint WM_APP_DEVICE = 0x4000;
         private const uint WM_APP_BUTTON = 0x4001;
         private const uint WM_DEVICECHANGE = 0x0219;
@@ -29,6 +39,10 @@ namespace MouseControl.Native
         private Set_VIDPID_Delegate? _setVidPid;
         private Open_DevMonitor_Delegate? _openMonitor;
         private Close_DevMonitor_Delegate? _closeMonitor;
+        private Open_FeatureDevice_Delegate? _openFeature;
+        private Close_FeatureDevice_Delegate? _closeFeature;
+        private SetFeature_Delegate? _setFeature;
+        private readonly object _featureLock = new();
 
         private Thread? _pumpThread;
         private volatile bool _running = false;
@@ -105,6 +119,17 @@ namespace MouseControl.Native
             _setVidPid = Marshal.GetDelegateForFunctionPointer<Set_VIDPID_Delegate>(pSetVidPid);
             _openMonitor = Marshal.GetDelegateForFunctionPointer<Open_DevMonitor_Delegate>(pOpenMonitor);
             _closeMonitor = Marshal.GetDelegateForFunctionPointer<Close_DevMonitor_Delegate>(pCloseMonitor);
+
+            var pOpenFeature = WinApi.GetProcAddress(_hDll, "Open_FeatureDevice");
+            var pCloseFeature = WinApi.GetProcAddress(_hDll, "Close_FeatureDevice");
+            var pSetFeature = WinApi.GetProcAddress(_hDll, "SetFeature");
+
+            if (pOpenFeature != IntPtr.Zero)
+                _openFeature = Marshal.GetDelegateForFunctionPointer<Open_FeatureDevice_Delegate>(pOpenFeature);
+            if (pCloseFeature != IntPtr.Zero)
+                _closeFeature = Marshal.GetDelegateForFunctionPointer<Close_FeatureDevice_Delegate>(pCloseFeature);
+            if (pSetFeature != IntPtr.Zero)
+                _setFeature = Marshal.GetDelegateForFunctionPointer<SetFeature_Delegate>(pSetFeature);
 
             // Initial hardware scan
             RefreshHardwareState();
@@ -552,9 +577,137 @@ namespace MouseControl.Native
 
         #endregion
 
+        #region Hardware Feature Commands (DPI & Sensor Settings)
+
+        public bool SendActiveDpiStage(int stage)
+        {
+            if (stage < 1 || stage > 6) return false;
+            if (_setFeature == null || _openFeature == null || _closeFeature == null)
+                return false;
+
+            lock (_featureLock)
+            {
+                try
+                {
+                    if (_openFeature() == 0) return false;
+
+                    byte[] report = new byte[9];
+                    report[0] = 0x09; // Report ID 9
+                    report[1] = 0x06; // Command 0x06: Switch active DPI stage
+                    report[2] = 0x01;
+                    byte stageByte = (byte)(stage - 1); // 0-based index
+                    report[3] = stageByte;
+                    report[4] = (byte)(~stageByte);
+
+                    IntPtr pReport = Marshal.AllocHGlobal(report.Length);
+                    try
+                    {
+                        Marshal.Copy(report, 0, pReport, report.Length);
+                        int res = _setFeature(pReport, report.Length);
+                        return res != 0;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(pReport);
+                        _closeFeature();
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        public bool SendSensorConfiguration(AppSettings settings)
+        {
+            if (settings == null) return false;
+            if (_setFeature == null || _openFeature == null || _closeFeature == null)
+                return false;
+
+            lock (_featureLock)
+            {
+                try
+                {
+                    if (_openFeature() == 0) return false;
+
+                    byte[] report = new byte[56];
+                    report[0] = 0x04; // Report ID 4
+                    report[1] = 0x38; // Length 56 (0x38 bytes)
+                    report[2] = 0x01;
+                    int activeStage = Math.Clamp(settings.SensorActiveDpiStage, 1, 6);
+                    report[3] = (byte)(activeStage - 1); // active stage (0-based)
+                    report[4] = 0x06; // 6 stages total
+                    report[5] = 0x3F; // stages 1-6 enabled mask (0b00111111)
+
+                    // Stages 1-6 DPI values in 50 DPI units
+                    int[] dpiStages = settings.SensorDpiStages ?? new int[] { 400, 800, 1600, 2400, 3200, 6400 };
+                    for (int i = 0; i < 6 && i < dpiStages.Length; i++)
+                    {
+                        int steps = Math.Clamp(dpiStages[i] / 50, 2, 240); // 100 to 12 000 DPI
+                        report[8 + i] = (byte)steps;
+                        report[16 + i] = 0x01; // Stage enabled
+                    }
+
+                    // Polling Rate (report[24]): 125Hz = 0, 250Hz = 1, 500Hz = 2, 1000Hz = 3
+                    report[24] = settings.SensorPollingRate switch
+                    {
+                        125 => 0,
+                        250 => 1,
+                        500 => 2,
+                        _ => 3
+                    };
+
+                    // Default DPI LED Colors (RGB per stage, 3 bytes each * 6 stages = 18 bytes from 25 to 42)
+                    byte[] defaultColors = new byte[] {
+                        0xFF, 0x00, 0x00, // Stage 1: Red
+                        0x00, 0xFF, 0x00, // Stage 2: Green
+                        0x00, 0x00, 0xFF, // Stage 3: Blue
+                        0xFF, 0xFF, 0x00, // Stage 4: Yellow
+                        0x00, 0xFF, 0xFF, // Stage 5: Cyan
+                        0xFF, 0x00, 0xFF  // Stage 6: Magenta
+                    };
+                    Buffer.BlockCopy(defaultColors, 0, report, 25, defaultColors.Length);
+
+                    // LOD (report[48]): 1mm = 0, 2mm = 1
+                    report[48] = (byte)(settings.SensorLod == "2mm" ? 1 : 0);
+                    report[49] = 0x01;
+
+                    // 16-bit word checksum over bytes 0..49
+                    ushort checksum = 0;
+                    for (int i = 0; i < 50; i++)
+                    {
+                        checksum += report[i];
+                    }
+                    report[50] = (byte)(checksum >> 8);
+                    report[51] = (byte)(checksum & 0xFF);
+
+                    IntPtr pReport = Marshal.AllocHGlobal(report.Length);
+                    try
+                    {
+                        Marshal.Copy(report, 0, pReport, report.Length);
+                        int res = _setFeature(pReport, report.Length);
+                        return res != 0;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(pReport);
+                        _closeFeature();
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        #endregion
+
         public void Dispose()
         {
             _running = false;
+            try { _closeFeature?.Invoke(); } catch { }
             if (_hWnd != IntPtr.Zero)
             {
                 WinApi.PostMessage(_hWnd, WinApi.WM_QUIT, IntPtr.Zero, IntPtr.Zero);

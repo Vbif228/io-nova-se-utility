@@ -676,7 +676,18 @@ namespace MouseControl
                 _settings.SensorActiveDpiStage = stage;
                 _settings.Save();
                 UpdateDpiStagesDisplay();
-                TxtSensorApplyStatus.Text = $"✓ Активна ступень {stage} ({_settings.SensorDpiStages[stage - 1]} DPI)";
+
+                int activeDpi = (_settings.SensorDpiStages != null && stage <= _settings.SensorDpiStages.Length)
+                    ? _settings.SensorDpiStages[stage - 1]
+                    : 800;
+
+                var driver = ((App)Application.Current).MouseDriver;
+                bool hwSent = driver?.SendActiveDpiStage(stage) == true;
+
+                TxtSensorApplyStatus.Text = hwSent
+                    ? $"✓ Мышь переключена: Ступень {stage} ({activeDpi} DPI)"
+                    : $"✓ Активна ступень {stage} ({activeDpi} DPI)";
+                TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
             }
         }
 
@@ -710,6 +721,8 @@ namespace MouseControl
         private void SliderDpi_DragCompleted(object sender, MouseButtonEventArgs e)
         {
             _settings.Save();
+            var driver = ((App)Application.Current).MouseDriver;
+            driver?.SendSensorConfiguration(_settings);
         }
 
         private void BtnDpiPreset_Click(object sender, RoutedEventArgs e)
@@ -718,6 +731,8 @@ namespace MouseControl
             {
                 SliderDpi.Value = presetDpi;
                 _settings.Save();
+                var driver = ((App)Application.Current).MouseDriver;
+                driver?.SendSensorConfiguration(_settings);
             }
         }
 
@@ -731,6 +746,8 @@ namespace MouseControl
 
             _settings.Save();
             TxtSensorApplyStatus.Text = $"Частота опроса: {_settings.SensorPollingRate} Гц";
+            var driver = ((App)Application.Current).MouseDriver;
+            driver?.SendSensorConfiguration(_settings);
         }
 
         private void RadioLod_Checked(object sender, RoutedEventArgs e)
@@ -739,6 +756,8 @@ namespace MouseControl
             _settings.SensorLod = RadioLod2mm.IsChecked == true ? "2mm" : "1mm";
             _settings.Save();
             TxtSensorApplyStatus.Text = $"Высота отрыва (LOD): {_settings.SensorLod}";
+            var driver = ((App)Application.Current).MouseDriver;
+            driver?.SendSensorConfiguration(_settings);
         }
 
         private void SliderSensorDebounce_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -757,12 +776,19 @@ namespace MouseControl
             _settings.SensorRippleControl = ChkRippleControl.IsChecked == true;
             _settings.SensorAngleSnapping = ChkAngleSnapping.IsChecked == true;
             _settings.Save();
+            var driver = ((App)Application.Current).MouseDriver;
+            driver?.SendSensorConfiguration(_settings);
         }
 
         private void BtnApplySensor_Click(object sender, RoutedEventArgs e)
         {
             _settings.Save();
-            TxtSensorApplyStatus.Text = "✓ Все настройки сенсора успешно применены!";
+            var driver = ((App)Application.Current).MouseDriver;
+            bool hwSent = driver?.SendSensorConfiguration(_settings) == true;
+
+            TxtSensorApplyStatus.Text = hwSent
+                ? "✓ Все параметры сенсора успешно отправлены в мышь!"
+                : "✓ Все параметры сенсора сохранены!";
             TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
 
             var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2.5) };
@@ -798,7 +824,10 @@ namespace MouseControl
             ChkRippleControl.IsChecked = false;
             ChkAngleSnapping.IsChecked = false;
 
-            TxtSensorApplyStatus.Text = "✓ Восстановлены заводские параметры (800 DPI, 1000 Гц, 1 мм)";
+            var driver = ((App)Application.Current).MouseDriver;
+            driver?.SendSensorConfiguration(_settings);
+
+            TxtSensorApplyStatus.Text = "✓ Восстановлены и отправлены в мышь заводские параметры (800 DPI, 1000 Гц, 1 мм)";
             TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
         }
 

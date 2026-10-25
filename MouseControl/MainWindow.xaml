@@ -142,7 +142,7 @@
 
                 <!-- TAB 1: BATTERY & STATUS -->
                 <ScrollViewer x:Name="PanelBattery" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Margin="0,4,0,24">
+                    <StackPanel Margin="0,4,0,4">
                         <!-- Hero Battery Card -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 BorderBrush="{DynamicResource CardBorderBrush}"
@@ -479,19 +479,7 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Power Tip Card -->
-                        <Border Background="{DynamicResource CardBackgroundBrush}"
-                                BorderBrush="{DynamicResource CardBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="10"
-                                Margin="0,10,0,0"
-                                Padding="14,10">
-                            <TextBlock Text="Пороги предупреждения о разряде и звуковые оповещения настраиваются во вкладке «Настройки»."
-                                       FontSize="12"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       TextWrapping="Wrap"
-                                       VerticalAlignment="Center" />
-                        </Border>
+
                     </StackPanel>
                 </ScrollViewer>
 
@@ -753,25 +741,21 @@
                                            Foreground="{DynamicResource TextSecondaryBrush}"
                                            Margin="0,0,0,14" />
 
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-
-                                    <RadioButton x:Name="RadioLod1mm" Grid.Column="0"
+                                <StackPanel>
+                                    <RadioButton x:Name="RadioLod1mm"
                                                  GroupName="LodGroup"
                                                  Style="{StaticResource ModernRadioButtonStyle}"
                                                  Content="1 мм (Низкая — рекомендовано для киберспорта)"
                                                  IsChecked="True"
+                                                 Margin="0,0,0,10"
                                                  Checked="RadioLod_Checked" />
 
-                                    <RadioButton x:Name="RadioLod2mm" Grid.Column="1"
+                                    <RadioButton x:Name="RadioLod2mm"
                                                  GroupName="LodGroup"
                                                  Style="{StaticResource ModernRadioButtonStyle}"
                                                  Content="2 мм (Высокая — для текстурированных ковров)"
                                                  Checked="RadioLod_Checked" />
-                                </Grid>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
 

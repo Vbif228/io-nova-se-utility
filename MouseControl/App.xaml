@@ -295,16 +295,22 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Grid Width="18" Height="18" Margin="0,0,10,0">
+                            <Grid Width="18" Height="18" Margin="0,0,10,0" UseLayoutRounding="True" SnapsToDevicePixels="True">
                                 <Ellipse x:Name="OuterCircle"
                                          Width="18" Height="18"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center"
                                          Stroke="{DynamicResource CardBorderBrush}"
-                                         StrokeThickness="1.5"
-                                         Fill="{DynamicResource HeaderBackgroundBrush}" />
+                                         StrokeThickness="2"
+                                         Fill="{DynamicResource HeaderBackgroundBrush}"
+                                         SnapsToDevicePixels="True" />
                                 <Ellipse x:Name="InnerDot"
                                          Width="8" Height="8"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center"
                                          Fill="{DynamicResource AccentColorBrush}"
-                                         Visibility="Collapsed" />
+                                         Visibility="Collapsed"
+                                         SnapsToDevicePixels="True" />
                             </Grid>
                             <ContentPresenter VerticalAlignment="Center" />
                         </StackPanel>
