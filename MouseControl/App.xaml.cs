@@ -142,6 +142,33 @@ namespace MouseControl
                 catch { }
             };
 
+            MouseDriver.DpiStageChanged += (stage) =>
+            {
+                if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished) return;
+
+                try
+                {
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished) return;
+
+                        Settings.SensorActiveDpiStage = stage;
+                        Settings.Save();
+
+                        int currentDpi = 800;
+                        if (Settings.SensorDpiStages != null && stage >= 1 && stage <= Settings.SensorDpiStages.Length)
+                        {
+                            currentDpi = Settings.SensorDpiStages[stage - 1];
+                        }
+
+                        MainWindowInstance?.UpdateActiveDpiStage(stage);
+                        NotificationManager?.ProcessDpiUpdate(stage, currentDpi);
+                        TrayManager?.UpdateDpiDisplay(stage, currentDpi);
+                    });
+                }
+                catch { }
+            };
+
             AutoClicker.Start();
             MouseDriver.Initialize();
 

@@ -21,6 +21,7 @@ namespace MouseControl.Services
 
         private ContextMenuStrip? _contextMenu;
         private ToolStripMenuItem _statusItem = null!;
+        private ToolStripMenuItem _dpiItem = null!;
         private ToolStripMenuItem _clickerToggleItem = null!;
         private Font? _boldFont;
         private bool _disposed = false;
@@ -85,6 +86,17 @@ namespace MouseControl.Services
             };
             _contextMenu.Items.Add(_statusItem);
 
+            int stage = _settings.SensorActiveDpiStage;
+            int currentDpi = (_settings.SensorDpiStages != null && stage >= 1 && stage <= _settings.SensorDpiStages.Length)
+                ? _settings.SensorDpiStages[stage - 1]
+                : 800;
+            _dpiItem = new ToolStripMenuItem($"DPI: {currentDpi} (Ступень {stage})")
+            {
+                Enabled = false,
+                Padding = new Padding(10, 5, 10, 5)
+            };
+            _contextMenu.Items.Add(_dpiItem);
+
             _clickerToggleItem = new ToolStripMenuItem(_settings.ClickerEnabled ? "✓  Автокликер: ВКЛ" : "○  Автокликер: ВЫКЛ")
             {
                 Padding = new Padding(10, 5, 10, 5)
@@ -106,6 +118,19 @@ namespace MouseControl.Services
             _contextMenu.Items.Add(exitItem);
 
             _notifyIcon.ContextMenuStrip = _contextMenu;
+        }
+
+        public void UpdateDpiDisplay(int stage, int dpi)
+        {
+            if (_disposed) return;
+            try
+            {
+                if (_dpiItem != null)
+                {
+                    _dpiItem.Text = $"DPI: {dpi} (Ступень {stage})";
+                }
+            }
+            catch { }
         }
 
         public void UpdateClickerMenuState(bool enabled)

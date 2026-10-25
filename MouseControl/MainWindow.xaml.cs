@@ -116,6 +116,7 @@ namespace MouseControl
             ChkSoundAlert.IsChecked = _settings.BatterySoundAlert;
             ChkToastAlert.IsChecked = _settings.BatteryNotificationAlert;
             ChkFullChargeAlert.IsChecked = _settings.BatteryNotifyFullCharge;
+            ChkDpiAlert.IsChecked = _settings.DpiNotificationAlert;
 
             ChkClickerMaster.IsChecked = _settings.ClickerEnabled;
             SliderCps.Value = _settings.ClickerCps;
@@ -458,6 +459,7 @@ namespace MouseControl
             _settings.BatterySoundAlert = ChkSoundAlert.IsChecked == true;
             _settings.BatteryNotificationAlert = ChkToastAlert.IsChecked == true;
             _settings.BatteryNotifyFullCharge = ChkFullChargeAlert.IsChecked == true;
+            _settings.DpiNotificationAlert = ChkDpiAlert.IsChecked == true;
             _settings.ClickerHumanizer = ChkHumanizer.IsChecked == true;
             _settings.MinimizeToTrayOnClose = ChkMinimizeOnClose.IsChecked == true;
             _settings.Save();
@@ -648,6 +650,22 @@ namespace MouseControl
             _isUpdatingDpiUi = true;
             SliderDpi.Value = currentVal;
             _isUpdatingDpiUi = false;
+        }
+
+        public void UpdateActiveDpiStage(int stage)
+        {
+            if (stage < 1 || stage > 6) return;
+
+            _settings.SensorActiveDpiStage = stage;
+            _selectedDpiStage = stage;
+            UpdateDpiStagesDisplay();
+
+            int activeDpi = (_settings.SensorDpiStages != null && stage <= _settings.SensorDpiStages.Length)
+                ? _settings.SensorDpiStages[stage - 1]
+                : 800;
+
+            TxtSensorApplyStatus.Text = $"✓ С мышки переключен DPI: Ступень {stage} ({activeDpi} DPI)";
+            TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
         }
 
         private void DpiStageCard_Click(object sender, MouseButtonEventArgs e)

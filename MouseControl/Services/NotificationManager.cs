@@ -28,6 +28,18 @@ namespace MouseControl.Services
             _notifyIcon = notifyIcon;
         }
 
+        public void ProcessDpiUpdate(int stage, int dpi)
+        {
+            if (_settings.DpiNotificationAlert)
+            {
+                ShowNotification(
+                    "DPI переключен",
+                    $"Ступень {stage}: {dpi} DPI",
+                    ToolTipIcon.Info
+                );
+            }
+        }
+
         public void ProcessBatteryUpdate(int percentage, bool isCharging, bool isConnected)
         {
             if (!isConnected || percentage < 0) return;

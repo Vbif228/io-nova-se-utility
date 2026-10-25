@@ -42,12 +42,13 @@ namespace MouseControl.Models
         public long TotalLmbClicks { get; set; } = 0;
         public long TotalRmbClicks { get; set; } = 0;
 
-        // Battery Notifications
+        // Battery & DPI Notifications
         public int BatteryWarningThreshold1 { get; set; } = 20;
         public int BatteryWarningThreshold2 { get; set; } = 10;
         public bool BatterySoundAlert { get; set; } = true;
         public bool BatteryNotificationAlert { get; set; } = true;
         public bool BatteryNotifyFullCharge { get; set; } = true;
+        public bool DpiNotificationAlert { get; set; } = true;
 
         private static readonly object _fileLock = new();
         private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };

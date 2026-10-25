@@ -48,6 +48,7 @@ namespace MouseControl.Native
         private bool _lastReportedWired = false;
 
         public event Action<int, bool, bool, bool>? BatteryUpdated; // percentage, isCharging, isConnected, isWired
+        public event Action<int>? DpiStageChanged; // active DPI stage (1-6)
 
         public int CurrentBattery
         {
@@ -137,8 +138,8 @@ namespace MouseControl.Native
                     connected = true;
                     _lastOnlineTick = Environment.TickCount64;
 
-                    // If on wire, mouse is fully powered / charging
-                    if (_currentBattery < 0 || _currentBattery < 80)
+                    // If on wire and no battery reported yet, default to 100
+                    if (_currentBattery < 0)
                         _currentBattery = 100;
 
                     battery = _currentBattery;
@@ -238,7 +239,7 @@ namespace MouseControl.Native
 
                 if (_hWnd != IntPtr.Zero && _openMonitor != null)
                 {
-                    // Pass 0 for btnMsg: We only monitor device/battery status (WM_APP_DEVICE).
+                    // Pass 0 for btnMsg: We only monitor device/battery/DPI status via WM_APP_DEVICE.
                     // We explicitly DO NOT monitor mouse buttons to prevent any input latency or hook overhead.
                     _openMonitor(_hWnd, WM_APP_DEVICE, 0);
                     WinApi.SetTimer(_hWnd, (UIntPtr)1, 5000, IntPtr.Zero); // 5-second periodic connection check
@@ -304,66 +305,146 @@ namespace MouseControl.Native
             }
         }
 
-        private IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
+        internal IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
             if (msg == WM_APP_DEVICE)
             {
                 long wp = wParam.ToInt64();
                 long lp = lParam.ToInt64();
-                byte status = (byte)(lp & 0xFF);
-                int battery = (int)((lp >> 8) & 0xFF);
+
+                byte header = (byte)(wp & 0xFF);
+                byte packetType = (byte)((wp >> 8) & 0xFF);
+                byte dataLow = (byte)(lp & 0xFF);
+                byte dataHigh = (byte)((lp >> 8) & 0xFF);
 
                 bool wired;
                 lock (_stateLock) { wired = _isWired; }
 
-                // wParam != 0 indicates the mouse is transmitting (online / connected).
-                // wParam == 0 indicates mouse is turned OFF or entered sleep mode.
-                bool isOnline = (wp != 0) && (battery >= 0 && battery <= 100);
-                bool connected = wired || isOnline;
-                bool charging = (status == 2) || wired;
-
-                if (connected)
+                if (wp == 0)
                 {
-                    _lastOnlineTick = Environment.TickCount64;
-                }
-
-                bool changed;
-                lock (_stateLock)
-                {
-                    if (connected)
+                    // Mouse turned OFF or entered sleep mode
+                    bool changed;
+                    lock (_stateLock)
                     {
-                        _currentBattery = battery;
-                    }
-                    _isCharging = charging;
-                    _isConnected = connected;
+                        bool connected = wired;
+                        _isConnected = connected;
+                        if (!connected)
+                        {
+                            _currentBattery = -1;
+                        }
 
-                    int reportBattery = connected ? battery : -1;
-                    changed = (reportBattery != _lastReportedBattery) ||
-                              (charging != _lastReportedCharging) ||
-                              (connected != _lastReportedConnected) ||
-                              (wired != _lastReportedWired);
+                        int reportBattery = connected ? _currentBattery : -1;
+                        changed = (reportBattery != _lastReportedBattery) ||
+                                  (_isCharging != _lastReportedCharging) ||
+                                  (connected != _lastReportedConnected) ||
+                                  (wired != _lastReportedWired);
+
+                        if (changed)
+                        {
+                            _lastReportedBattery = reportBattery;
+                            _lastReportedCharging = _isCharging;
+                            _lastReportedConnected = connected;
+                            _lastReportedWired = wired;
+                        }
+                    }
 
                     if (changed)
                     {
-                        _lastReportedBattery = reportBattery;
-                        _lastReportedCharging = charging;
-                        _lastReportedConnected = connected;
-                        _lastReportedWired = wired;
+                        RaiseBatteryUpdated(wired ? _currentBattery : -1, _isCharging, wired, wired);
                     }
+                    return WinApi.DefWindowProc(hWnd, msg, wParam, lParam);
                 }
 
-                if (changed)
+                // Any report with valid protocol (header 0x47 'G') indicates device is active and communicating
+                if (header == 0x47)
                 {
-                    RaiseBatteryUpdated(connected ? battery : -1, charging, connected, wired);
+                    _lastOnlineTick = Environment.TickCount64;
+                    lock (_stateLock)
+                    {
+                        _isConnected = true;
+                    }
+
+                    // Report ID 3 protocol (header 0x47 'G'):
+                    // packetType 0x10: Hardware DPI stage switch (dataLow: active stage 1-6)
+                    if (packetType == 0x10)
+                    {
+                        int stage = dataLow;
+                        if (stage >= 1 && stage <= 6)
+                        {
+                            RaiseDpiStageChanged(stage);
+                        }
+                        return WinApi.DefWindowProc(hWnd, msg, wParam, lParam);
+                    }
+
+                    // packetType 0x20: Profile switch, 0x50: Sleep mode, 0x60: Polling rate, 0x70, 0x80
+                    if (packetType == 0x20 || packetType == 0x50 || packetType == 0x60 || packetType == 0x70 || packetType == 0x80)
+                    {
+                        return WinApi.DefWindowProc(hWnd, msg, wParam, lParam);
+                    }
+
+                    // packetType 0x40: Dedicated battery & charging status
+                    if (packetType == 0x40)
+                    {
+                        byte status = dataLow;
+                        int battery = dataHigh;
+
+                        bool isOnline = (battery >= 0 && battery <= 100);
+                        bool connected = wired || isOnline;
+                        bool charging = (status == 2) || wired;
+
+                        bool changed;
+                        lock (_stateLock)
+                        {
+                            if (connected && isOnline)
+                            {
+                                _currentBattery = battery;
+                            }
+                            _isCharging = charging;
+                            _isConnected = connected;
+
+                            int reportBattery = connected ? _currentBattery : -1;
+                            changed = (reportBattery != _lastReportedBattery) ||
+                                      (charging != _lastReportedCharging) ||
+                                      (connected != _lastReportedConnected) ||
+                                      (wired != _lastReportedWired);
+
+                            if (changed)
+                            {
+                                _lastReportedBattery = reportBattery;
+                                _lastReportedCharging = charging;
+                                _lastReportedConnected = connected;
+                                _lastReportedWired = wired;
+                            }
+                        }
+
+                        if (changed)
+                        {
+                            RaiseBatteryUpdated(connected ? _currentBattery : -1, charging, connected, wired);
+                        }
+                    }
                 }
             }
             else if (msg == WM_DEVICECHANGE)
             {
-                // Only on physical USB hardware connect/disconnect
                 TriggerAsyncHardwareRefresh();
             }
 
             return WinApi.DefWindowProc(hWnd, msg, wParam, lParam);
+        }
+
+        private void RaiseDpiStageChanged(int stage)
+        {
+            var handler = DpiStageChanged;
+            if (handler == null) return;
+
+            foreach (Action<int> subscriber in handler.GetInvocationList())
+            {
+                try
+                {
+                    subscriber(stage);
+                }
+                catch { }
+            }
         }
 
         private void RaiseBatteryUpdated(int percentage, bool isCharging, bool isConnected, bool isWired)
