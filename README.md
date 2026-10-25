@@ -33,12 +33,8 @@
 ---
 
 ## Скриншоты и интерфейс
-<img width="1020" height="960" alt="изображение" src="https://github.com/user-attachments/assets/54d3a222-fe09-4bef-abb1-80f88157f744" />
-<img width="1020" height="960" alt="изображение" src="https://github.com/user-attachments/assets/b41a3795-7d17-4f65-8f77-065734e91848" />
-
-| Тёмная тема | Светлая тема |
-|:---:|:---:|
-| Современный интерфейс со шкалой заряда и ресурса | Пастельная тема с высоким контрастом |
+<img width="510" height="490" alt="изображение" src="https://github.com/user-attachments/assets/54d3a222-fe09-4bef-abb1-80f88157f744" />
+<img width="510" height="490" alt="изображение" src="https://github.com/user-attachments/assets/b41a3795-7d17-4f65-8f77-065734e91848" />
 
 ---
 
