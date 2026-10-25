@@ -19,5 +19,6 @@ GenerateAppIcon/
 ## OEM Backup & Temp
 Original_Driver/
 Release_Installer/
+*.bat
 *.log
 *.tmp
