@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Mouse Control"
         Icon="app.ico"
-        Width="720" Height="740"
-        MinWidth="700" MinHeight="680"
+        Width="730" Height="760"
+        MinWidth="700" MinHeight="700"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -22,7 +22,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="48" /> <!-- Title Bar -->
-                <RowDefinition Height="56" /> <!-- Tab Navigation (Spacious, no clipping) -->
+                <RowDefinition Height="Auto" /> <!-- Tab Navigation (Spacious, dynamically sized, zero clipping) -->
                 <RowDefinition Height="*" />  <!-- Tab Content -->
             </Grid.RowDefinitions>
 
@@ -93,7 +93,7 @@
             <!-- Navigation Bar -->
             <Border Grid.Row="1"
                     Background="{DynamicResource WindowBackgroundBrush}"
-                    Padding="16,7,16,7"
+                    Padding="16,8,16,8"
                     BorderBrush="{DynamicResource CardBorderBrush}"
                     BorderThickness="0,0,0,1">
                 <Border Background="{DynamicResource HeaderBackgroundBrush}"
@@ -101,7 +101,7 @@
                         BorderBrush="{DynamicResource CardBorderBrush}"
                         BorderThickness="1"
                         Padding="3"
-                        Height="40">
+                        MinHeight="44">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -142,13 +142,13 @@
 
                 <!-- TAB 1: BATTERY & STATUS -->
                 <ScrollViewer x:Name="PanelBattery" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Margin="0,4,0,28">
+                    <StackPanel Margin="0,4,0,24">
                         <!-- Hero Battery Card -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Padding="20">
+                                Padding="18,14">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -157,7 +157,7 @@
                                 </Grid.RowDefinitions>
 
                                 <!-- Top Row: Device Name & Status Badge -->
-                                <Grid Grid.Row="0" Margin="0,0,0,16">
+                                <Grid Grid.Row="0" Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -203,7 +203,7 @@
                                 </Grid>
 
                                 <!-- Battery Percentage & Description -->
-                                <Grid Grid.Row="1" Margin="0,0,0,16">
+                                <Grid Grid.Row="1" Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
@@ -211,19 +211,19 @@
 
                                     <TextBlock x:Name="TxtBatteryPercent"
                                                Text="--%"
-                                               FontSize="52" FontWeight="Bold"
+                                               FontSize="48" FontWeight="Bold"
                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                VerticalAlignment="Center"
-                                               Margin="0,0,24,0" />
+                                               Margin="0,0,20,0" />
 
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock x:Name="TxtConnectionTitle"
                                                    Text="Опрос подключения..."
-                                                   FontSize="16" FontWeight="SemiBold"
+                                                   FontSize="15" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource TextPrimaryBrush}" />
                                         <TextBlock x:Name="TxtBatteryModeDesc"
                                                    Text="Определение статуса кабеля и батареи..."
-                                                   FontSize="13" Margin="0,5,0,0"
+                                                   FontSize="12" Margin="0,4,0,0"
                                                    Foreground="{DynamicResource TextSecondaryBrush}" />
                                     </StackPanel>
                                 </Grid>
@@ -269,23 +269,23 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,12">
                             <StackPanel>
                                 <TextBlock Text="Характеристики оборудования"
                                            FontSize="14" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
-                                           Margin="0,0,0,14" />
+                                           Margin="0,0,0,10" />
 
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="10" />
+                                        <RowDefinition Height="8" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="8" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
@@ -295,7 +295,7 @@
                                             BorderBrush="{DynamicResource CardBorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="8"
-                                            Padding="14,12">
+                                            Padding="12,10">
                                         <StackPanel>
                                             <TextBlock Text="ИНТЕРФЕЙС"
                                                        FontSize="11" FontWeight="Bold"
@@ -303,11 +303,11 @@
                                             <TextBlock Text="2.4G Беспроводной / Type-C"
                                                        FontSize="13" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       Margin="0,5,0,0" />
+                                                       Margin="0,4,0,0" />
                                             <TextBlock Text="Задержка 1 мс · 1000 Гц"
                                                        FontSize="12"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                                       Margin="0,3,0,0" />
+                                                       Margin="0,2,0,0" />
                                         </StackPanel>
                                     </Border>
 
@@ -317,7 +317,7 @@
                                             BorderBrush="{DynamicResource CardBorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="8"
-                                            Padding="14,12">
+                                            Padding="12,10">
                                         <StackPanel>
                                             <TextBlock Text="ОПТИЧЕСКИЙ СЕНСОР"
                                                        FontSize="11" FontWeight="Bold"
@@ -325,11 +325,11 @@
                                             <TextBlock Text="PixArt PAW3311 Optical"
                                                        FontSize="13" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       Margin="0,5,0,0" />
+                                                       Margin="0,4,0,0" />
                                             <TextBlock Text="12 000 DPI · 300 IPS · 35G"
                                                        FontSize="12"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                                       Margin="0,3,0,0" />
+                                                       Margin="0,2,0,0" />
                                         </StackPanel>
                                     </Border>
 
@@ -339,7 +339,7 @@
                                             BorderBrush="{DynamicResource CardBorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="8"
-                                            Padding="14,12">
+                                            Padding="12,10">
                                         <StackPanel>
                                             <TextBlock Text="МИКРОПЕРЕКЛЮЧАТЕЛИ"
                                                        FontSize="11" FontWeight="Bold"
@@ -347,11 +347,11 @@
                                             <TextBlock Text="Huano Blue Shell Pink Dot"
                                                        FontSize="13" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       Margin="0,5,0,0" />
+                                                       Margin="0,4,0,0" />
                                             <TextBlock Text="Ресурс: 80 млн нажатий"
                                                        FontSize="12"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                                       Margin="0,3,0,0" />
+                                                       Margin="0,2,0,0" />
                                         </StackPanel>
                                     </Border>
 
@@ -361,7 +361,7 @@
                                             BorderBrush="{DynamicResource CardBorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="8"
-                                            Padding="14,12">
+                                            Padding="12,10">
                                         <StackPanel>
                                             <TextBlock Text="ЭНЕРГОСБЕРЕЖЕНИЕ"
                                                        FontSize="11" FontWeight="Bold"
@@ -369,11 +369,11 @@
                                             <TextBlock Text="Smart Sleep (Авто-сон)"
                                                        FontSize="13" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       Margin="0,5,0,0" />
+                                                       Margin="0,4,0,0" />
                                             <TextBlock Text="Мгновенное пробуждение"
                                                        FontSize="12"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                                       Margin="0,3,0,0" />
+                                                       Margin="0,2,0,0" />
                                         </StackPanel>
                                     </Border>
                                 </Grid>
@@ -385,10 +385,10 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,12">
                             <StackPanel>
-                                <Grid Margin="0,0,0,14">
+                                <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -403,17 +403,17 @@
                                     </StackPanel>
                                     <Button x:Name="BtnResetSessionClicks" Grid.Column="1"
                                             Style="{StaticResource ModernButtonStyle}"
-                                            Padding="12,5"
+                                            Padding="12,4"
                                             ToolTip="Сбросить статистику нажатий текущей сессии"
                                             Click="BtnResetSessionClicks_Click">
                                         <TextBlock Text="Сброс сессии" FontSize="11" />
                                     </Button>
                                 </Grid>
 
-                                <Grid Margin="0,0,0,12">
+                                <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="8" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
@@ -423,21 +423,21 @@
                                             BorderBrush="{DynamicResource CardBorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="8"
-                                            Padding="14,12">
+                                            Padding="12,10">
                                         <StackPanel>
                                             <TextBlock Text="ОБЩИЙ ПРОБЕГ"
                                                        FontSize="11" FontWeight="Bold"
                                                        Foreground="{DynamicResource TextMutedBrush}" />
                                             <TextBlock x:Name="TxtTotalClicksVal"
                                                        Text="0 кликов"
-                                                       FontSize="20" FontWeight="Bold"
+                                                       FontSize="18" FontWeight="Bold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       Margin="0,4,0,0" />
+                                                       Margin="0,3,0,0" />
                                             <TextBlock x:Name="TxtLifespanUsedVal"
                                                        Text="0.00% ресурса (80 млн)"
                                                        FontSize="12"
                                                        Foreground="{DynamicResource AccentColorBrush}"
-                                                       Margin="0,3,0,0" />
+                                                       Margin="0,2,0,0" />
                                         </StackPanel>
                                     </Border>
 
@@ -447,21 +447,21 @@
                                             BorderBrush="{DynamicResource CardBorderBrush}"
                                             BorderThickness="1"
                                             CornerRadius="8"
-                                            Padding="14,12">
+                                            Padding="12,10">
                                         <StackPanel>
                                             <TextBlock Text="ТЕКУЩАЯ СЕССИЯ"
                                                        FontSize="11" FontWeight="Bold"
                                                        Foreground="{DynamicResource TextMutedBrush}" />
                                             <TextBlock x:Name="TxtSessionClicksVal"
                                                        Text="0 кликов"
-                                                       FontSize="20" FontWeight="Bold"
+                                                       FontSize="18" FontWeight="Bold"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       Margin="0,4,0,0" />
+                                                       Margin="0,3,0,0" />
                                             <TextBlock x:Name="TxtSessionBreakdownVal"
                                                        Text="ЛКМ: 0 · ПКМ: 0"
                                                        FontSize="12"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                                       Margin="0,3,0,0" />
+                                                       Margin="0,2,0,0" />
                                         </StackPanel>
                                     </Border>
                                 </Grid>
@@ -484,10 +484,10 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="16,14">
+                                Margin="0,10,0,0"
+                                Padding="14,10">
                             <TextBlock Text="Пороги предупреждения о разряде и звуковые оповещения настраиваются во вкладке «Настройки»."
-                                       FontSize="13"
+                                       FontSize="12"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        TextWrapping="Wrap"
                                        VerticalAlignment="Center" />
@@ -497,13 +497,13 @@
 
                 <!-- TAB 2: SENSOR & DPI -->
                 <ScrollViewer x:Name="PanelSensor" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Margin="0,4,0,28">
+                    <StackPanel Margin="0,4,0,24">
                         <!-- Hero DPI Stages Card -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Padding="18">
+                                Padding="16,14">
                             <StackPanel>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -526,14 +526,14 @@
                                             Padding="10,5"
                                             VerticalAlignment="Center">
                                         <TextBlock x:Name="TxtActiveDpiSummary"
-                                                   Text="Ступень 3: 1600 DPI"
+                                                   Text="Ступень 2: 800 DPI"
                                                    FontSize="12" FontWeight="Bold"
                                                    Foreground="{DynamicResource AccentColorBrush}" />
                                     </Border>
                                 </Grid>
 
                                 <!-- 6 Interactive Stages -->
-                                <Grid Margin="0,16,0,16">
+                                <Grid Margin="0,14,0,14">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="8" />
@@ -550,7 +550,7 @@
 
                                     <!-- Stage 1 -->
                                     <Border x:Name="CardStage1" Grid.Column="0"
-                                            Background="{DynamicResource CardHoverBrush}"
+                                            Background="{DynamicResource CardBackgroundBrush}"
                                             BorderBrush="{DynamicResource CardBorderBrush}"
                                             BorderThickness="1" CornerRadius="8" Padding="6,8"
                                             Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="1">
@@ -566,9 +566,9 @@
 
                                     <!-- Stage 2 -->
                                     <Border x:Name="CardStage2" Grid.Column="2"
-                                            Background="{DynamicResource CardHoverBrush}"
-                                            BorderBrush="{DynamicResource CardBorderBrush}"
-                                            BorderThickness="1" CornerRadius="8" Padding="6,8"
+                                            Background="{DynamicResource HeaderBackgroundBrush}"
+                                            BorderBrush="{DynamicResource AccentColorBrush}"
+                                            BorderThickness="2" CornerRadius="8" Padding="6,8"
                                             Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="2">
                                         <StackPanel HorizontalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
@@ -582,9 +582,9 @@
 
                                     <!-- Stage 3 -->
                                     <Border x:Name="CardStage3" Grid.Column="4"
-                                            Background="{DynamicResource CardHoverBrush}"
-                                            BorderBrush="{DynamicResource AccentColorBrush}"
-                                            BorderThickness="1.5" CornerRadius="8" Padding="6,8"
+                                            Background="{DynamicResource CardBackgroundBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1" CornerRadius="8" Padding="6,8"
                                             Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="3">
                                         <StackPanel HorizontalAlignment="Center">
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
@@ -598,7 +598,7 @@
 
                                     <!-- Stage 4 -->
                                     <Border x:Name="CardStage4" Grid.Column="6"
-                                            Background="{DynamicResource CardHoverBrush}"
+                                            Background="{DynamicResource CardBackgroundBrush}"
                                             BorderBrush="{DynamicResource CardBorderBrush}"
                                             BorderThickness="1" CornerRadius="8" Padding="6,8"
                                             Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="4">
@@ -614,7 +614,7 @@
 
                                     <!-- Stage 5 -->
                                     <Border x:Name="CardStage5" Grid.Column="8"
-                                            Background="{DynamicResource CardHoverBrush}"
+                                            Background="{DynamicResource CardBackgroundBrush}"
                                             BorderBrush="{DynamicResource CardBorderBrush}"
                                             BorderThickness="1" CornerRadius="8" Padding="6,8"
                                             Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="5">
@@ -630,7 +630,7 @@
 
                                     <!-- Stage 6 -->
                                     <Border x:Name="CardStage6" Grid.Column="10"
-                                            Background="{DynamicResource CardHoverBrush}"
+                                            Background="{DynamicResource CardBackgroundBrush}"
                                             BorderBrush="{DynamicResource CardBorderBrush}"
                                             BorderThickness="1" CornerRadius="8" Padding="6,8"
                                             Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="6">
@@ -652,12 +652,12 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock x:Name="TxtSelectedStageTitle"
-                                               Text="Настройка ступени 3:"
+                                               Text="Настройка ступени 2:"
                                                FontSize="13" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                VerticalAlignment="Center" />
                                     <TextBlock x:Name="TxtCurrentStageDpiVal" Grid.Column="1"
-                                               Text="1600 DPI" FontSize="15" FontWeight="Bold"
+                                               Text="800 DPI" FontSize="15" FontWeight="Bold"
                                                Foreground="{DynamicResource AccentColorBrush}"
                                                VerticalAlignment="Center" />
                                 </Grid>
@@ -665,8 +665,9 @@
                                 <Slider x:Name="SliderDpi"
                                         Style="{StaticResource ModernSliderStyle}"
                                         Minimum="100" Maximum="12000" SmallChange="50" LargeChange="200"
-                                        Value="1600" Margin="0,0,0,14"
-                                        ValueChanged="SliderDpi_ValueChanged" />
+                                        Value="800" Margin="0,0,0,14"
+                                        ValueChanged="SliderDpi_ValueChanged"
+                                        PreviewMouseLeftButtonUp="SliderDpi_DragCompleted" />
 
                                 <!-- Fast Preset Chips -->
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -687,8 +688,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <StackPanel>
                                 <TextBlock Text="Частота опроса порта (Polling Rate)"
                                            FontSize="14" FontWeight="SemiBold"
@@ -740,8 +741,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <StackPanel>
                                 <TextBlock Text="Высота отрыва сенсора (LOD)"
                                            FontSize="14" FontWeight="SemiBold"
@@ -779,8 +780,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <StackPanel>
                                 <TextBlock Text="Аппаратные оптимизации PixArt PAW3311"
                                            FontSize="14" FontWeight="SemiBold"
@@ -846,8 +847,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="16">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -878,13 +879,13 @@
 
                 <!-- TAB 3: AUTO-CLICKER -->
                 <ScrollViewer x:Name="PanelClicker" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Margin="0,4,0,28">
+                    <StackPanel Margin="0,4,0,24">
                         <!-- Master Toggle Card -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Padding="18">
+                                Padding="16,14">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -914,8 +915,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
@@ -949,8 +950,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <StackPanel>
                                 <TextBlock Text="Клавиша и режим активации"
                                            FontSize="14" FontWeight="SemiBold"
@@ -1002,8 +1003,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <StackPanel>
                                 <TextBlock Text="Интерактивный полигон кликера"
                                            FontSize="14" FontWeight="SemiBold"
@@ -1044,13 +1045,13 @@
 
                 <!-- TAB 4: SETTINGS -->
                 <ScrollViewer x:Name="PanelSettings" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Margin="0,4,0,28">
+                    <StackPanel Margin="0,4,0,24">
                         <!-- Appearance Card -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Padding="18">
+                                Padding="16,14">
                             <StackPanel>
                                 <TextBlock Text="Оформление интерфейса"
                                            FontSize="14" FontWeight="SemiBold"
@@ -1077,8 +1078,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <StackPanel>
                                 <TextBlock Text="Системная интеграция"
                                            FontSize="14" FontWeight="SemiBold"
@@ -1104,8 +1105,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
@@ -1155,8 +1156,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <StackPanel>
                                 <TextBlock Text="Уведомления и пороги батареи"
                                            FontSize="14" FontWeight="SemiBold"
@@ -1230,8 +1231,8 @@
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,12,0,0"
-                                Padding="18">
+                                Margin="0,10,0,0"
+                                Padding="16,14">
                             <StackPanel>
                                 <TextBlock Text="О мыши и оборудовании"
                                            FontSize="14" FontWeight="SemiBold"

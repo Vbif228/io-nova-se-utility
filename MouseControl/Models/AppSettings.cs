@@ -24,7 +24,7 @@ namespace MouseControl.Models
         public bool ClickerAudioFeedback { get; set; } = false;
 
         // Sensor & DPI Configuration (PixArt PAW3311 up to 12 000 DPI)
-        public int SensorActiveDpiStage { get; set; } = 3; // 1 to 6 (default stage 3: 1600 DPI)
+        public int SensorActiveDpiStage { get; set; } = 2; // 1 to 6 (default stage 2: 800 DPI)
         public int[] SensorDpiStages { get; set; } = new int[] { 400, 800, 1600, 2400, 3200, 6400 };
         public string[] SensorDpiColors { get; set; } = new string[] { "#EF4444", "#10B981", "#3B82F6", "#F59E0B", "#06B6D4", "#8B5CF6" };
         public int SensorPollingRate { get; set; } = 1000; // 125, 250, 500, 1000 Hz
@@ -75,7 +75,7 @@ namespace MouseControl.Models
                             if (loaded.SensorDpiColors == null || loaded.SensorDpiColors.Length != 6)
                                 loaded.SensorDpiColors = new string[] { "#EF4444", "#10B981", "#3B82F6", "#F59E0B", "#06B6D4", "#8B5CF6" };
                             if (loaded.SensorActiveDpiStage < 1 || loaded.SensorActiveDpiStage > 6)
-                                loaded.SensorActiveDpiStage = 3;
+                                loaded.SensorActiveDpiStage = 2;
                             if (string.IsNullOrEmpty(loaded.SensorLod))
                                 loaded.SensorLod = "1mm";
                             if (loaded.SensorPollingRate != 125 && loaded.SensorPollingRate != 250 && loaded.SensorPollingRate != 500 && loaded.SensorPollingRate != 1000)

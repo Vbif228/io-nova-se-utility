@@ -16,7 +16,7 @@ namespace MouseControl
         private bool _isCapturingKey = false;
         private int _testClickCounter = 0;
         private Button _activeTabButton = null!;
-        private int _selectedDpiStage = 3;
+        private int _selectedDpiStage = 2;
         private bool _isUpdatingDpiUi = false;
 
         public MainWindow()
@@ -490,6 +490,7 @@ namespace MouseControl
             RadioThemeDark.IsChecked = !isLight;
 
             UpdateTabButtonsVisual();
+            UpdateDpiStagesDisplay();
             if (_currentBatteryBrush != null)
             {
                 _currentBatteryBrush = (Brush)FindResource("AccentColorBrush");
@@ -577,16 +578,19 @@ namespace MouseControl
 
                 if (isActive)
                 {
+                    card.SetResourceReference(Border.BackgroundProperty, "HeaderBackgroundBrush");
                     card.SetResourceReference(Border.BorderBrushProperty, "AccentColorBrush");
-                    card.BorderThickness = new Thickness(1.5);
+                    card.BorderThickness = new Thickness(2);
                 }
                 else if (isSelected)
                 {
+                    card.SetResourceReference(Border.BackgroundProperty, "CardHoverBrush");
                     card.SetResourceReference(Border.BorderBrushProperty, "TextSecondaryBrush");
                     card.BorderThickness = new Thickness(1);
                 }
                 else
                 {
+                    card.SetResourceReference(Border.BackgroundProperty, "CardBackgroundBrush");
                     card.SetResourceReference(Border.BorderBrushProperty, "CardBorderBrush");
                     card.BorderThickness = new Thickness(1);
                 }
@@ -650,7 +654,10 @@ namespace MouseControl
             {
                 TxtActiveDpiSummary.Text = $"Ступень {_selectedDpiStage}: {dpi} DPI";
             }
+        }
 
+        private void SliderDpi_DragCompleted(object sender, MouseButtonEventArgs e)
+        {
             _settings.Save();
         }
 
@@ -659,6 +666,7 @@ namespace MouseControl
             if (sender is Button btn && btn.Tag != null && int.TryParse(btn.Tag.ToString(), out int presetDpi))
             {
                 SliderDpi.Value = presetDpi;
+                _settings.Save();
             }
         }
 
