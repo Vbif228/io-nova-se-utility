@@ -19,15 +19,48 @@ namespace MouseControl
         private int _selectedDpiStage = 2;
         private bool _isUpdatingDpiUi = false;
 
+        private static void Log(string msg)
+        {
+            try
+            {
+                string logPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "MouseControl", "app.log");
+                File.AppendAllText(logPath, $"[{DateTime.Now:HH:mm:ss.fff}] [MainWindow] {msg}\n");
+            }
+            catch { }
+        }
+
         public MainWindow()
         {
-            InitializeComponent();
+            Log("Constructor start");
+            try
+            {
+                InitializeComponent();
+                Log("InitializeComponent done");
+            }
+            catch (Exception ex)
+            {
+                Log($"InitializeComponent failed: {ex}");
+                throw;
+            }
 
             _settings = ((App)Application.Current).Settings;
             _activeTabButton = TabBtnBattery;
 
-            LoadSettingsIntoUi();
+            try
+            {
+                LoadSettingsIntoUi();
+                Log("LoadSettingsIntoUi done");
+            }
+            catch (Exception ex)
+            {
+                Log($"LoadSettingsIntoUi failed: {ex}");
+                throw;
+            }
+
             UpdateTabButtonsVisual();
+            Log("UpdateTabButtonsVisual done");
 
             var clicker = ((App)Application.Current).AutoClicker;
             clicker.StateChanged += isClicking =>

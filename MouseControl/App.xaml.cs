@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using MouseControl.Models;
 using MouseControl.Native;
@@ -52,11 +53,26 @@ namespace MouseControl
             {
                 Log($"Unhandled exception: {ev.ExceptionObject}");
             };
+            TaskScheduler.UnobservedTaskException += (s, ev) =>
+            {
+                Log($"Unobserved task exception: {ev.Exception}");
+                ev.SetObserved();
+            };
 
-            const string appGuid = "MouseControl_Unique_SingleInstance_Guid_2026";
-            _mutex = new Mutex(true, appGuid, out bool createdNew);
+            const string appGuid = "Global\\MouseControl_Unique_SingleInstance_Guid_2026";
+            _mutex = new Mutex(false, appGuid);
+            bool hasHandle = false;
+            try
+            {
+                hasHandle = _mutex.WaitOne(100, false);
+            }
+            catch (AbandonedMutexException)
+            {
+                Log("Acquired abandoned mutex from terminated previous instance.");
+                hasHandle = true;
+            }
 
-            if (!createdNew)
+            if (!hasHandle)
             {
                 Log("Another instance already running. Exiting.");
                 Shutdown();
@@ -130,16 +146,23 @@ namespace MouseControl
             MouseDriver.Initialize();
 
             Log("Components initialized. Creating MainWindow...");
-            MainWindowInstance = new MainWindow();
-            MainWindow = MainWindowInstance;
-            Log("MainWindow created.");
-
-            bool startMinimized = e.Args.Contains("--minimized");
-            Log($"startMinimized: {startMinimized}");
-            if (!startMinimized)
+            try
             {
-                MainWindowInstance.Show();
-                Log("MainWindow.Show() called.");
+                MainWindowInstance = new MainWindow();
+                MainWindow = MainWindowInstance;
+                Log("MainWindow created successfully.");
+
+                bool startMinimized = e.Args.Contains("--minimized");
+                Log($"startMinimized: {startMinimized}");
+                if (!startMinimized)
+                {
+                    MainWindowInstance.Show();
+                    Log("MainWindow.Show() called.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"CRITICAL MainWindow creation failure: {ex}");
             }
             Log("Application_Startup finished.");
         }

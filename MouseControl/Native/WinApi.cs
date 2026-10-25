@@ -53,6 +53,7 @@ namespace MouseControl.Native
         #endregion
 
         #region Windows Hooks
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate IntPtr LowLevelProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
@@ -154,6 +155,7 @@ namespace MouseControl.Native
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool DestroyIcon(IntPtr hIcon);
 
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -205,6 +207,7 @@ namespace MouseControl.Native
             public uint time;
             public int pt_x;
             public int pt_y;
+            public uint lPrivate;
         }
 
         [DllImport("user32.dll", ExactSpelling = true)]
