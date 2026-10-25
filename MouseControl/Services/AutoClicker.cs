@@ -388,10 +388,6 @@ namespace MouseControl.Services
                                 if (_settings.ClickerMode == "Toggle")
                                 {
                                     _toggleState = !_toggleState;
-                                    if (_settings.ClickerAudioFeedback)
-                                    {
-                                        PlayTone(_toggleState ? 900 : 500);
-                                    }
                                 }
                             }
                         }
@@ -440,10 +436,6 @@ namespace MouseControl.Services
 
                     if (shouldClick)
                     {
-                        if (!IsClicking && _settings.ClickerAudioFeedback && _settings.ClickerMode != "Toggle")
-                        {
-                            PlayTone(850);
-                        }
                         IsClicking = true;
 
                         // Calculate timing based on CPS (1 to 60 CPS)
@@ -525,18 +517,6 @@ namespace MouseControl.Services
                 _isButtonDown = false;
                 WinApi.mouse_event(WinApi.MOUSEEVENTF_LEFTUP, 0, 0, 0, UIntPtr.Zero);
             }
-        }
-
-        private void PlayTone(int frequency)
-        {
-            ThreadPool.QueueUserWorkItem(_ =>
-            {
-                try
-                {
-                    Console.Beep(frequency, 35);
-                }
-                catch { }
-            });
         }
 
         public void Dispose()

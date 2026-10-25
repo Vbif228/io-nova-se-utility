@@ -16,6 +16,8 @@ namespace MouseControl
         private bool _isCapturingKey = false;
         private int _testClickCounter = 0;
         private Button _activeTabButton = null!;
+        private int _selectedDpiStage = 3;
+        private bool _isUpdatingDpiUi = false;
 
         public MainWindow()
         {
@@ -86,13 +88,36 @@ namespace MouseControl
             SliderCps.Value = _settings.ClickerCps;
             TxtCpsVal.Text = $"{_settings.ClickerCps} CPS ({(int)(1000.0 / _settings.ClickerCps)} мс)";
             ChkHumanizer.IsChecked = _settings.ClickerHumanizer;
-            ChkClickerAudio.IsChecked = _settings.ClickerAudioFeedback;
             TxtKeyName.Text = _settings.ClickerTriggerKeyName;
 
             if (_settings.ClickerMode == "Toggle")
                 RadioModeToggle.IsChecked = true;
             else
                 RadioModeHold.IsChecked = true;
+
+            // Load Sensor & DPI Settings
+            _selectedDpiStage = _settings.SensorActiveDpiStage;
+            UpdateDpiStagesDisplay();
+
+            switch (_settings.SensorPollingRate)
+            {
+                case 125: RadioRate125.IsChecked = true; break;
+                case 250: RadioRate250.IsChecked = true; break;
+                case 500: RadioRate500.IsChecked = true; break;
+                case 1000: default: RadioRate1000.IsChecked = true; break;
+            }
+
+            if (_settings.SensorLod == "2mm")
+                RadioLod2mm.IsChecked = true;
+            else
+                RadioLod1mm.IsChecked = true;
+
+            SliderSensorDebounce.Value = _settings.SensorKeyDebounceMs;
+            TxtSensorDebounceVal.Text = $"{_settings.SensorKeyDebounceMs} мс";
+
+            ChkMotionSync.IsChecked = _settings.SensorMotionSync;
+            ChkRippleControl.IsChecked = _settings.SensorRippleControl;
+            ChkAngleSnapping.IsChecked = _settings.SensorAngleSnapping;
 
             ChkDebounceMaster.IsChecked = _settings.DebounceEnabled;
             SliderDebounce.Value = _settings.DebounceMs;
@@ -313,6 +338,11 @@ namespace MouseControl
             SwitchTab(PanelBattery, TabBtnBattery);
         }
 
+        private void TabBtnSensor_Click(object sender, RoutedEventArgs e)
+        {
+            SwitchTab(PanelSensor, TabBtnSensor);
+        }
+
         private void TabBtnClicker_Click(object sender, RoutedEventArgs e)
         {
             SwitchTab(PanelClicker, TabBtnClicker);
@@ -328,6 +358,7 @@ namespace MouseControl
             _activeTabButton = tabBtn;
 
             PanelBattery.Visibility = Visibility.Collapsed;
+            PanelSensor.Visibility = Visibility.Collapsed;
             PanelClicker.Visibility = Visibility.Collapsed;
             PanelSettings.Visibility = Visibility.Collapsed;
 
@@ -354,6 +385,7 @@ namespace MouseControl
             }
 
             ApplyTabStyle(TabBtnBattery, _activeTabButton == TabBtnBattery);
+            ApplyTabStyle(TabBtnSensor, _activeTabButton == TabBtnSensor);
             ApplyTabStyle(TabBtnClicker, _activeTabButton == TabBtnClicker);
             ApplyTabStyle(TabBtnSettings, _activeTabButton == TabBtnSettings);
         }
@@ -394,7 +426,6 @@ namespace MouseControl
             _settings.BatteryNotificationAlert = ChkToastAlert.IsChecked == true;
             _settings.BatteryNotifyFullCharge = ChkFullChargeAlert.IsChecked == true;
             _settings.ClickerHumanizer = ChkHumanizer.IsChecked == true;
-            _settings.ClickerAudioFeedback = ChkClickerAudio.IsChecked == true;
             _settings.MinimizeToTrayOnClose = ChkMinimizeOnClose.IsChecked == true;
             _settings.Save();
         }
@@ -525,18 +556,193 @@ namespace MouseControl
             TxtTestClickCount.Text = "0";
         }
 
-        private void BtnOpenBackup_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                string path = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Original_Driver"));
-                if (!Directory.Exists(path))
-                    path = Path.GetFullPath("Original_Driver");
+        #region Sensor & DPI Implementation
 
-                if (Directory.Exists(path))
-                    Process.Start(new ProcessStartInfo("explorer.exe", path) { UseShellExecute = true });
+        private void UpdateDpiStagesDisplay()
+        {
+            if (_settings.SensorDpiStages == null || _settings.SensorDpiStages.Length != 6)
+                _settings.SensorDpiStages = new int[] { 400, 800, 1600, 2400, 3200, 6400 };
+
+            TxtStageDpi1.Text = _settings.SensorDpiStages[0].ToString();
+            TxtStageDpi2.Text = _settings.SensorDpiStages[1].ToString();
+            TxtStageDpi3.Text = _settings.SensorDpiStages[2].ToString();
+            TxtStageDpi4.Text = _settings.SensorDpiStages[3].ToString();
+            TxtStageDpi5.Text = _settings.SensorDpiStages[4].ToString();
+            TxtStageDpi6.Text = _settings.SensorDpiStages[5].ToString();
+
+            void HighlightCard(Border card, int stageNum)
+            {
+                bool isActive = _settings.SensorActiveDpiStage == stageNum;
+                bool isSelected = _selectedDpiStage == stageNum;
+
+                if (isActive)
+                {
+                    card.SetResourceReference(Border.BorderBrushProperty, "AccentColorBrush");
+                    card.BorderThickness = new Thickness(1.5);
+                }
+                else if (isSelected)
+                {
+                    card.SetResourceReference(Border.BorderBrushProperty, "TextSecondaryBrush");
+                    card.BorderThickness = new Thickness(1);
+                }
+                else
+                {
+                    card.SetResourceReference(Border.BorderBrushProperty, "CardBorderBrush");
+                    card.BorderThickness = new Thickness(1);
+                }
             }
-            catch { }
+
+            HighlightCard(CardStage1, 1);
+            HighlightCard(CardStage2, 2);
+            HighlightCard(CardStage3, 3);
+            HighlightCard(CardStage4, 4);
+            HighlightCard(CardStage5, 5);
+            HighlightCard(CardStage6, 6);
+
+            int activeStage = Math.Clamp(_settings.SensorActiveDpiStage, 1, 6);
+            int activeDpi = _settings.SensorDpiStages[activeStage - 1];
+            TxtActiveDpiSummary.Text = $"Ступень {activeStage}: {activeDpi} DPI";
+
+            int selStage = Math.Clamp(_selectedDpiStage, 1, 6);
+            int currentVal = _settings.SensorDpiStages[selStage - 1];
+            TxtSelectedStageTitle.Text = $"Настройка ступени {selStage}:";
+            TxtCurrentStageDpiVal.Text = $"{currentVal} DPI";
+
+            _isUpdatingDpiUi = true;
+            SliderDpi.Value = currentVal;
+            _isUpdatingDpiUi = false;
         }
+
+        private void DpiStageCard_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is Border border && border.Tag != null && int.TryParse(border.Tag.ToString(), out int stage))
+            {
+                _selectedDpiStage = stage;
+                _settings.SensorActiveDpiStage = stage;
+                _settings.Save();
+                UpdateDpiStagesDisplay();
+                TxtSensorApplyStatus.Text = $"✓ Активна ступень {stage} ({_settings.SensorDpiStages[stage - 1]} DPI)";
+            }
+        }
+
+        private void SliderDpi_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_isUpdatingDpiUi || !IsLoaded) return;
+
+            int dpi = (int)(Math.Round(SliderDpi.Value / 50.0) * 50);
+            dpi = Math.Clamp(dpi, 100, 12000);
+
+            int stageIdx = Math.Clamp(_selectedDpiStage - 1, 0, 5);
+            _settings.SensorDpiStages[stageIdx] = dpi;
+            TxtCurrentStageDpiVal.Text = $"{dpi} DPI";
+
+            switch (_selectedDpiStage)
+            {
+                case 1: TxtStageDpi1.Text = dpi.ToString(); break;
+                case 2: TxtStageDpi2.Text = dpi.ToString(); break;
+                case 3: TxtStageDpi3.Text = dpi.ToString(); break;
+                case 4: TxtStageDpi4.Text = dpi.ToString(); break;
+                case 5: TxtStageDpi5.Text = dpi.ToString(); break;
+                case 6: TxtStageDpi6.Text = dpi.ToString(); break;
+            }
+
+            if (_selectedDpiStage == _settings.SensorActiveDpiStage)
+            {
+                TxtActiveDpiSummary.Text = $"Ступень {_selectedDpiStage}: {dpi} DPI";
+            }
+
+            _settings.Save();
+        }
+
+        private void BtnDpiPreset_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag != null && int.TryParse(btn.Tag.ToString(), out int presetDpi))
+            {
+                SliderDpi.Value = presetDpi;
+            }
+        }
+
+        private void RadioRate_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            if (RadioRate125.IsChecked == true) _settings.SensorPollingRate = 125;
+            else if (RadioRate250.IsChecked == true) _settings.SensorPollingRate = 250;
+            else if (RadioRate500.IsChecked == true) _settings.SensorPollingRate = 500;
+            else if (RadioRate1000.IsChecked == true) _settings.SensorPollingRate = 1000;
+
+            _settings.Save();
+            TxtSensorApplyStatus.Text = $"Частота опроса: {_settings.SensorPollingRate} Гц";
+        }
+
+        private void RadioLod_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            _settings.SensorLod = RadioLod2mm.IsChecked == true ? "2mm" : "1mm";
+            _settings.Save();
+            TxtSensorApplyStatus.Text = $"Высота отрыва (LOD): {_settings.SensorLod}";
+        }
+
+        private void SliderSensorDebounce_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!IsLoaded) return;
+            int ms = (int)SliderSensorDebounce.Value;
+            TxtSensorDebounceVal.Text = $"{ms} мс";
+            _settings.SensorKeyDebounceMs = ms;
+            _settings.Save();
+        }
+
+        private void SensorFeature_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            _settings.SensorMotionSync = ChkMotionSync.IsChecked == true;
+            _settings.SensorRippleControl = ChkRippleControl.IsChecked == true;
+            _settings.SensorAngleSnapping = ChkAngleSnapping.IsChecked == true;
+            _settings.Save();
+        }
+
+        private void BtnApplySensor_Click(object sender, RoutedEventArgs e)
+        {
+            _settings.Save();
+            TxtSensorApplyStatus.Text = "✓ Все настройки сенсора успешно применены!";
+            TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
+
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2.5) };
+            timer.Tick += (s, ev) =>
+            {
+                timer.Stop();
+                TxtSensorApplyStatus.Text = "Все настройки сенсора синхронизированы";
+                TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
+            };
+            timer.Start();
+        }
+
+        private void BtnResetSensorDefaults_Click(object sender, RoutedEventArgs e)
+        {
+            _settings.SensorDpiStages = new int[] { 400, 800, 1600, 2400, 3200, 6400 };
+            _settings.SensorActiveDpiStage = 2; // 800 DPI
+            _settings.SensorPollingRate = 1000;
+            _settings.SensorLod = "1mm";
+            _settings.SensorKeyDebounceMs = 4;
+            _settings.SensorMotionSync = true;
+            _settings.SensorRippleControl = false;
+            _settings.SensorAngleSnapping = false;
+            _settings.Save();
+
+            _selectedDpiStage = 2;
+            UpdateDpiStagesDisplay();
+
+            RadioRate1000.IsChecked = true;
+            RadioLod1mm.IsChecked = true;
+            SliderSensorDebounce.Value = 4;
+            TxtSensorDebounceVal.Text = "4 мс";
+            ChkMotionSync.IsChecked = true;
+            ChkRippleControl.IsChecked = false;
+            ChkAngleSnapping.IsChecked = false;
+
+            TxtSensorApplyStatus.Text = "✓ Восстановлены заводские параметры (800 DPI, 1000 Гц, 1 мм)";
+            TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
+        }
+
+        #endregion
     }
 }

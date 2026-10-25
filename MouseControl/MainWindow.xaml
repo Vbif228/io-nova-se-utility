@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Mouse Control"
         Icon="app.ico"
-        Width="680" Height="640"
+        Width="720" Height="740"
+        MinWidth="700" MinHeight="680"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -20,8 +21,8 @@
             CornerRadius="10">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="46" /> <!-- Title Bar -->
-                <RowDefinition Height="54" /> <!-- Tab Navigation (Spacious, no clipping) -->
+                <RowDefinition Height="48" /> <!-- Title Bar -->
+                <RowDefinition Height="56" /> <!-- Tab Navigation (Spacious, no clipping) -->
                 <RowDefinition Height="*" />  <!-- Tab Content -->
             </Grid.RowDefinitions>
 
@@ -92,7 +93,7 @@
             <!-- Navigation Bar -->
             <Border Grid.Row="1"
                     Background="{DynamicResource WindowBackgroundBrush}"
-                    Padding="16,8,16,8"
+                    Padding="16,7,16,7"
                     BorderBrush="{DynamicResource CardBorderBrush}"
                     BorderThickness="0,0,0,1">
                 <Border Background="{DynamicResource HeaderBackgroundBrush}"
@@ -100,9 +101,10 @@
                         BorderBrush="{DynamicResource CardBorderBrush}"
                         BorderThickness="1"
                         Padding="3"
-                        Height="38">
+                        Height="40">
                     <Grid>
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
@@ -111,30 +113,36 @@
                         <Button x:Name="TabBtnBattery" Grid.Column="0"
                                 Style="{StaticResource TabButtonStyle}"
                                 Click="TabBtnBattery_Click">
-                            <TextBlock Text="Батарея и статус" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="Батарея и статус" VerticalAlignment="Center" />
                         </Button>
 
-                        <Button x:Name="TabBtnClicker" Grid.Column="1"
+                        <Button x:Name="TabBtnSensor" Grid.Column="1"
+                                Style="{StaticResource TabButtonStyle}"
+                                Click="TabBtnSensor_Click">
+                            <TextBlock Text="Сенсор и DPI" VerticalAlignment="Center" />
+                        </Button>
+
+                        <Button x:Name="TabBtnClicker" Grid.Column="2"
                                 Style="{StaticResource TabButtonStyle}"
                                 Click="TabBtnClicker_Click">
-                            <TextBlock Text="Автокликер" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="Автокликер" VerticalAlignment="Center" />
                         </Button>
 
-                        <Button x:Name="TabBtnSettings" Grid.Column="2"
+                        <Button x:Name="TabBtnSettings" Grid.Column="3"
                                 Style="{StaticResource TabButtonStyle}"
                                 Click="TabBtnSettings_Click">
-                            <TextBlock Text="Настройки" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="Настройки" VerticalAlignment="Center" />
                         </Button>
                     </Grid>
                 </Border>
             </Border>
 
             <!-- Tab Content Viewports -->
-            <Grid Grid.Row="2" Margin="16,14,16,16">
+            <Grid Grid.Row="2" Margin="16,10,16,14">
 
                 <!-- TAB 1: BATTERY & STATUS -->
-                <ScrollViewer x:Name="PanelBattery" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="0,0,0,8">
+                <ScrollViewer x:Name="PanelBattery" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="0,4,0,28">
                         <!-- Hero Battery Card -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 BorderBrush="{DynamicResource CardBorderBrush}"
@@ -487,9 +495,390 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- TAB 2: AUTO-CLICKER -->
-                <ScrollViewer x:Name="PanelClicker" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="0,0,0,8">
+                <!-- TAB 2: SENSOR & DPI -->
+                <ScrollViewer x:Name="PanelSensor" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="0,4,0,28">
+                        <!-- Hero DPI Stages Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="18">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Уровни чувствительности (DPI)"
+                                                   FontSize="15" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                                        <TextBlock Text="Оптический сенсор PixArt PAW3311 • от 100 до 12 000 DPI (шаг 50 DPI)"
+                                                   FontSize="12" Margin="0,3,0,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1"
+                                            Background="{DynamicResource CardHoverBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="10,5"
+                                            VerticalAlignment="Center">
+                                        <TextBlock x:Name="TxtActiveDpiSummary"
+                                                   Text="Ступень 3: 1600 DPI"
+                                                   FontSize="12" FontWeight="Bold"
+                                                   Foreground="{DynamicResource AccentColorBrush}" />
+                                    </Border>
+                                </Grid>
+
+                                <!-- 6 Interactive Stages -->
+                                <Grid Margin="0,16,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Stage 1 -->
+                                    <Border x:Name="CardStage1" Grid.Column="0"
+                                            Background="{DynamicResource CardHoverBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1" CornerRadius="8" Padding="6,8"
+                                            Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="1">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                                <Ellipse Width="8" Height="8" Fill="#EF4444" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="1" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtStageDpi1" Text="400" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                                            <TextBlock Text="DPI" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Stage 2 -->
+                                    <Border x:Name="CardStage2" Grid.Column="2"
+                                            Background="{DynamicResource CardHoverBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1" CornerRadius="8" Padding="6,8"
+                                            Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="2">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                                <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="2" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtStageDpi2" Text="800" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                                            <TextBlock Text="DPI" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Stage 3 -->
+                                    <Border x:Name="CardStage3" Grid.Column="4"
+                                            Background="{DynamicResource CardHoverBrush}"
+                                            BorderBrush="{DynamicResource AccentColorBrush}"
+                                            BorderThickness="1.5" CornerRadius="8" Padding="6,8"
+                                            Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="3">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                                <Ellipse Width="8" Height="8" Fill="#3B82F6" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="3" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtStageDpi3" Text="1600" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                                            <TextBlock Text="DPI" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Stage 4 -->
+                                    <Border x:Name="CardStage4" Grid.Column="6"
+                                            Background="{DynamicResource CardHoverBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1" CornerRadius="8" Padding="6,8"
+                                            Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="4">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                                <Ellipse Width="8" Height="8" Fill="#F59E0B" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="4" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtStageDpi4" Text="2400" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                                            <TextBlock Text="DPI" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Stage 5 -->
+                                    <Border x:Name="CardStage5" Grid.Column="8"
+                                            Background="{DynamicResource CardHoverBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1" CornerRadius="8" Padding="6,8"
+                                            Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="5">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                                <Ellipse Width="8" Height="8" Fill="#06B6D4" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="5" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtStageDpi5" Text="3200" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                                            <TextBlock Text="DPI" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Stage 6 -->
+                                    <Border x:Name="CardStage6" Grid.Column="10"
+                                            Background="{DynamicResource CardHoverBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1" CornerRadius="8" Padding="6,8"
+                                            Cursor="Hand" MouseLeftButtonDown="DpiStageCard_Click" Tag="6">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                                <Ellipse Width="8" Height="8" Fill="#8B5CF6" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="6" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtStageDpi6" Text="6400" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+                                            <TextBlock Text="DPI" FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Fine-Tuning Slider for Selected Stage -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="TxtSelectedStageTitle"
+                                               Text="Настройка ступени 3:"
+                                               FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock x:Name="TxtCurrentStageDpiVal" Grid.Column="1"
+                                               Text="1600 DPI" FontSize="15" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentColorBrush}"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+
+                                <Slider x:Name="SliderDpi"
+                                        Style="{StaticResource ModernSliderStyle}"
+                                        Minimum="100" Maximum="12000" SmallChange="50" LargeChange="200"
+                                        Value="1600" Margin="0,0,0,14"
+                                        ValueChanged="SliderDpi_ValueChanged" />
+
+                                <!-- Fast Preset Chips -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Style="{StaticResource ModernButtonStyle}" Content="400" Padding="10,4" FontSize="11" Margin="0,0,6,0" Click="BtnDpiPreset_Click" Tag="400" />
+                                    <Button Style="{StaticResource ModernButtonStyle}" Content="800" Padding="10,4" FontSize="11" Margin="0,0,6,0" Click="BtnDpiPreset_Click" Tag="800" />
+                                    <Button Style="{StaticResource ModernButtonStyle}" Content="1200" Padding="10,4" FontSize="11" Margin="0,0,6,0" Click="BtnDpiPreset_Click" Tag="1200" />
+                                    <Button Style="{StaticResource ModernButtonStyle}" Content="1600" Padding="10,4" FontSize="11" Margin="0,0,6,0" Click="BtnDpiPreset_Click" Tag="1600" />
+                                    <Button Style="{StaticResource ModernButtonStyle}" Content="2400" Padding="10,4" FontSize="11" Margin="0,0,6,0" Click="BtnDpiPreset_Click" Tag="2400" />
+                                    <Button Style="{StaticResource ModernButtonStyle}" Content="3200" Padding="10,4" FontSize="11" Margin="0,0,6,0" Click="BtnDpiPreset_Click" Tag="3200" />
+                                    <Button Style="{StaticResource ModernButtonStyle}" Content="6400" Padding="10,4" FontSize="11" Margin="0,0,6,0" Click="BtnDpiPreset_Click" Tag="6400" />
+                                    <Button Style="{StaticResource ModernButtonStyle}" Content="12000" Padding="10,4" FontSize="11" Click="BtnDpiPreset_Click" Tag="12000" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Polling Rate Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Частота опроса порта (Polling Rate)"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,4" />
+                                <TextBlock Text="Скорость передачи координат движения мыши в Windows:"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Margin="0,0,0,14" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <RadioButton x:Name="RadioRate125" Grid.Column="0"
+                                                 GroupName="PollingRateGroup"
+                                                 Style="{StaticResource ModernRadioButtonStyle}"
+                                                 Content="125 Гц (8 мс)"
+                                                 Checked="RadioRate_Checked" />
+
+                                    <RadioButton x:Name="RadioRate250" Grid.Column="1"
+                                                 GroupName="PollingRateGroup"
+                                                 Style="{StaticResource ModernRadioButtonStyle}"
+                                                 Content="250 Гц (4 мс)"
+                                                 Checked="RadioRate_Checked" />
+
+                                    <RadioButton x:Name="RadioRate500" Grid.Column="2"
+                                                 GroupName="PollingRateGroup"
+                                                 Style="{StaticResource ModernRadioButtonStyle}"
+                                                 Content="500 Гц (2 мс)"
+                                                 Checked="RadioRate_Checked" />
+
+                                    <RadioButton x:Name="RadioRate1000" Grid.Column="3"
+                                                 GroupName="PollingRateGroup"
+                                                 Style="{StaticResource ModernRadioButtonStyle}"
+                                                 Content="1000 Гц (1 мс)"
+                                                 IsChecked="True"
+                                                 Checked="RadioRate_Checked" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Lift-Off Distance (LOD) Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Высота отрыва сенсора (LOD)"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,4" />
+                                <TextBlock Text="Дистанция отключения оптического сенсора при отрыве от ковра:"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Margin="0,0,0,14" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <RadioButton x:Name="RadioLod1mm" Grid.Column="0"
+                                                 GroupName="LodGroup"
+                                                 Style="{StaticResource ModernRadioButtonStyle}"
+                                                 Content="1 мм (Низкая — рекомендовано для киберспорта)"
+                                                 IsChecked="True"
+                                                 Checked="RadioLod_Checked" />
+
+                                    <RadioButton x:Name="RadioLod2mm" Grid.Column="1"
+                                                 GroupName="LodGroup"
+                                                 Style="{StaticResource ModernRadioButtonStyle}"
+                                                 Content="2 мм (Высокая — для текстурированных ковров)"
+                                                 Checked="RadioLod_Checked" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Hardware Sensor & Switch Features Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Аппаратные оптимизации PixArt PAW3311"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,14" />
+
+                                <!-- Sensor Key Debounce -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Время отклика переключателей (Debounce):"
+                                               FontSize="13" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                    <TextBlock x:Name="TxtSensorDebounceVal" Grid.Column="1"
+                                               Text="4 мс" FontSize="14" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentColorBrush}" />
+                                </Grid>
+                                <Slider x:Name="SliderSensorDebounce"
+                                        Style="{StaticResource ModernSliderStyle}"
+                                        Minimum="2" Maximum="20" SmallChange="1" LargeChange="2"
+                                        Value="4" Margin="0,0,0,6"
+                                        ValueChanged="SliderSensorDebounce_ValueChanged" />
+                                <TextBlock Text="Аппаратная фильтрация контактов переключателей Huano Blue Shell без задержки первого клика."
+                                           FontSize="12" Margin="0,0,0,16" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+
+                                <!-- Motion Sync -->
+                                <CheckBox x:Name="ChkMotionSync"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          Content="Motion Sync (Синхронизация с опросом USB)"
+                                          Margin="0,0,0,4"
+                                          Checked="SensorFeature_Changed" Unchecked="SensorFeature_Changed" />
+                                <TextBlock Text="Синхронизирует считывание сенсора с пакетами USB. Максимальная плавность прицеливания на мониторах 144–360 Гц."
+                                           FontSize="12" Margin="0,0,0,14" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+
+                                <!-- Ripple Control -->
+                                <CheckBox x:Name="ChkRippleControl"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          Content="Ripple Control (Анти-джиттер сглаживание)"
+                                          Margin="0,0,0,4"
+                                          Checked="SensorFeature_Changed" Unchecked="SensorFeature_Changed" />
+                                <TextBlock Text="Стабилизирует трекинг на значениях выше 3200 DPI, устраняя паразитное дрожание руки."
+                                           FontSize="12" Margin="0,0,0,14" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+
+                                <!-- Angle Snapping -->
+                                <CheckBox x:Name="ChkAngleSnapping"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          Content="Angle Snapping (Угловая привязка к осям)"
+                                          Margin="0,0,0,4"
+                                          Checked="SensorFeature_Changed" Unchecked="SensorFeature_Changed" />
+                                <TextBlock Text="Выравнивает движение по осям X/Y. Полезно для графики и черчения, рекомендуется отключить для шутеров."
+                                           FontSize="12" Margin="0,0,0,0" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Action Bar Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtSensorApplyStatus"
+                                               Text="Все настройки сенсора синхронизированы"
+                                               FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                    <TextBlock Text="Параметры сохраняются в локальном профиле мыши."
+                                               FontSize="12" Margin="0,2,0,0"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource ModernButtonStyle}"
+                                            Content="Сброс"
+                                            Margin="0,0,8,0"
+                                            Click="BtnResetSensorDefaults_Click" />
+                                    <Button Style="{StaticResource AccentButtonStyle}"
+                                            Content="Применить"
+                                            Click="BtnApplySensor_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- TAB 3: AUTO-CLICKER -->
+                <ScrollViewer x:Name="PanelClicker" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="0,4,0,28">
                         <!-- Master Toggle Card -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 BorderBrush="{DynamicResource CardBorderBrush}"
@@ -551,12 +940,6 @@
                                 <CheckBox x:Name="ChkHumanizer"
                                           Style="{StaticResource ModernToggleSwitchStyle}"
                                           Content="Humanizer (микро-разброс задержки ±3 мс против античитов)"
-                                          Margin="0,0,0,12"
-                                          Checked="SettingChanged" Unchecked="SettingChanged" />
-
-                                <CheckBox x:Name="ChkClickerAudio"
-                                          Style="{StaticResource ModernToggleSwitchStyle}"
-                                          Content="Звуковой щелчок при включении кликера"
                                           Checked="SettingChanged" Unchecked="SettingChanged" />
                             </StackPanel>
                         </Border>
@@ -659,9 +1042,9 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- TAB 3: SETTINGS -->
-                <ScrollViewer x:Name="PanelSettings" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="0,0,0,8">
+                <!-- TAB 4: SETTINGS -->
+                <ScrollViewer x:Name="PanelSettings" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="0,4,0,28">
                         <!-- Appearance Card -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 BorderBrush="{DynamicResource CardBorderBrush}"
@@ -857,14 +1240,9 @@
                                 <TextBlock Text="IO by Red Square Nova SE • Сенсор PixArt PAW3311 (до 12 000 DPI)"
                                            FontSize="13" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}" />
-                                <TextBlock Text="Hardware ID: VID: 1D57 | PID: FA60. Настройки DPI и сенсора хранятся в энергонезависимой памяти мыши."
-                                           FontSize="12" Margin="0,4,0,12" TextWrapping="Wrap"
+                                <TextBlock Text="Hardware ID: VID: 1D57 | PID: FA60. Настройки DPI и сенсора сохраняются в профиле мыши."
+                                           FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"
                                            Foreground="{DynamicResource TextSecondaryBrush}" />
-
-                                <Button Style="{StaticResource ModernButtonStyle}"
-                                        HorizontalAlignment="Left"
-                                        Content="Открыть резервную копию софта"
-                                        Click="BtnOpenBackup_Click" />
                             </StackPanel>
                         </Border>
                     </StackPanel>

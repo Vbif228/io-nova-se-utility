@@ -32,9 +32,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "autostart"; Description: "Запускать Mouse Control вместе с Windows"; GroupDescription: "Параметры запуска:"
 
 [Files]
-Source: "..\MouseControl\bin\Publish\MouseControl.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\MouseControl\bin\Publish\hiddriver_1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\MouseControl\bin\Publish\app.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\MouseControl\bin\Publish\*"; DestDir: "{app}"; Flags: ignoreversion; Excludes: "*.pdb"
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\app.ico"

@@ -21,7 +21,18 @@ namespace MouseControl.Models
         public string ClickerMode { get; set; } = "Hold"; // "Hold" or "Toggle"
         public int ClickerTriggerVk { get; set; } = 0xC0; // VK_OEM_3 = ~ / Ё
         public string ClickerTriggerKeyName { get; set; } = "Ё ( ~ )";
-        public bool ClickerAudioFeedback { get; set; } = true;
+        public bool ClickerAudioFeedback { get; set; } = false;
+
+        // Sensor & DPI Configuration (PixArt PAW3311 up to 12 000 DPI)
+        public int SensorActiveDpiStage { get; set; } = 3; // 1 to 6 (default stage 3: 1600 DPI)
+        public int[] SensorDpiStages { get; set; } = new int[] { 400, 800, 1600, 2400, 3200, 6400 };
+        public string[] SensorDpiColors { get; set; } = new string[] { "#EF4444", "#10B981", "#3B82F6", "#F59E0B", "#06B6D4", "#8B5CF6" };
+        public int SensorPollingRate { get; set; } = 1000; // 125, 250, 500, 1000 Hz
+        public string SensorLod { get; set; } = "1mm"; // "1mm" or "2mm"
+        public int SensorKeyDebounceMs { get; set; } = 4; // 2 to 20 ms hardware debounce
+        public bool SensorAngleSnapping { get; set; } = false;
+        public bool SensorRippleControl { get; set; } = false;
+        public bool SensorMotionSync { get; set; } = true;
 
         // Debounce Filter (Anti-Double-Click)
         public bool DebounceEnabled { get; set; } = true;
@@ -57,7 +68,20 @@ namespace MouseControl.Models
                     {
                         string json = File.ReadAllText(SettingsPath);
                         var loaded = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions);
-                        if (loaded != null) return loaded;
+                        if (loaded != null)
+                        {
+                            if (loaded.SensorDpiStages == null || loaded.SensorDpiStages.Length != 6)
+                                loaded.SensorDpiStages = new int[] { 400, 800, 1600, 2400, 3200, 6400 };
+                            if (loaded.SensorDpiColors == null || loaded.SensorDpiColors.Length != 6)
+                                loaded.SensorDpiColors = new string[] { "#EF4444", "#10B981", "#3B82F6", "#F59E0B", "#06B6D4", "#8B5CF6" };
+                            if (loaded.SensorActiveDpiStage < 1 || loaded.SensorActiveDpiStage > 6)
+                                loaded.SensorActiveDpiStage = 3;
+                            if (string.IsNullOrEmpty(loaded.SensorLod))
+                                loaded.SensorLod = "1mm";
+                            if (loaded.SensorPollingRate != 125 && loaded.SensorPollingRate != 250 && loaded.SensorPollingRate != 500 && loaded.SensorPollingRate != 1000)
+                                loaded.SensorPollingRate = 1000;
+                            return loaded;
+                        }
                     }
                 }
                 catch
