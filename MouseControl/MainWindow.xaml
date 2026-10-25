@@ -1,0 +1,876 @@
+<Window x:Class="MouseControl.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Mouse Control"
+        Icon="app.ico"
+        Width="680" Height="640"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="CanMinimize"
+        FontFamily="Segoe UI Variable Text, Segoe UI, -apple-system, sans-serif"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
+        UseLayoutRounding="True">
+
+    <Border Background="{DynamicResource WindowBackgroundBrush}"
+            BorderBrush="{DynamicResource CardBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="46" /> <!-- Title Bar -->
+                <RowDefinition Height="54" /> <!-- Tab Navigation (Spacious, no clipping) -->
+                <RowDefinition Height="*" />  <!-- Tab Content -->
+            </Grid.RowDefinitions>
+
+            <!-- Custom Draggable Title Bar -->
+            <Border Grid.Row="0"
+                    Background="{DynamicResource HeaderBackgroundBrush}"
+                    CornerRadius="9,9,0,0"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="0,0,0,1"
+                    MouseDown="TitleBar_MouseDown">
+                <Grid Margin="16,0,12,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Canvas Width="15" Height="18" Margin="0,0,10,0" VerticalAlignment="Center">
+                            <Rectangle Width="13" Height="17" Canvas.Left="1" Canvas.Top="0.5"
+                                       RadiusX="6.5" RadiusY="6.5"
+                                       Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.5" Fill="Transparent" />
+                            <Line X1="7.5" Y1="3.5" X2="7.5" Y2="7.5"
+                                  Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                        </Canvas>
+                        <TextBlock Text="Mouse Control"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" />
+                        <Border Background="{DynamicResource CardHoverBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Margin="10,0,0,0"
+                                Padding="8,2"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="IO Nova SE"
+                                       FontSize="11" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="BtnThemeToggle"
+                                Style="{StaticResource WindowControlButtonStyle}"
+                                ToolTip="Переключить тему (Тёмная / Пастельная)"
+                                Click="BtnThemeToggle_Click">
+                            <TextBlock x:Name="TxtThemeIcon" Text="🌙" FontSize="12" />
+                        </Button>
+
+                        <Button Style="{StaticResource WindowControlButtonStyle}"
+                                Margin="4,0,2,0"
+                                ToolTip="Свернуть"
+                                Click="BtnMinimize_Click">
+                            <TextBlock Text="—" FontSize="12" />
+                        </Button>
+
+                        <Button Style="{StaticResource WindowCloseButtonStyle}"
+                                Margin="2,0,0,0"
+                                ToolTip="Закрыть"
+                                Click="BtnClose_Click">
+                            <TextBlock Text="✕" FontSize="11" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Navigation Bar -->
+            <Border Grid.Row="1"
+                    Background="{DynamicResource WindowBackgroundBrush}"
+                    Padding="16,8,16,8"
+                    BorderBrush="{DynamicResource CardBorderBrush}"
+                    BorderThickness="0,0,0,1">
+                <Border Background="{DynamicResource HeaderBackgroundBrush}"
+                        CornerRadius="8"
+                        BorderBrush="{DynamicResource CardBorderBrush}"
+                        BorderThickness="1"
+                        Padding="3"
+                        Height="38">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="TabBtnBattery" Grid.Column="0"
+                                Style="{StaticResource TabButtonStyle}"
+                                Click="TabBtnBattery_Click">
+                            <TextBlock Text="Батарея и статус" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </Button>
+
+                        <Button x:Name="TabBtnClicker" Grid.Column="1"
+                                Style="{StaticResource TabButtonStyle}"
+                                Click="TabBtnClicker_Click">
+                            <TextBlock Text="Автокликер" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </Button>
+
+                        <Button x:Name="TabBtnSettings" Grid.Column="2"
+                                Style="{StaticResource TabButtonStyle}"
+                                Click="TabBtnSettings_Click">
+                            <TextBlock Text="Настройки" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </Button>
+                    </Grid>
+                </Border>
+            </Border>
+
+            <!-- Tab Content Viewports -->
+            <Grid Grid.Row="2" Margin="16,14,16,16">
+
+                <!-- TAB 1: BATTERY & STATUS -->
+                <ScrollViewer x:Name="PanelBattery" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,0,8">
+                        <!-- Hero Battery Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="20">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Top Row: Device Name & Status Badge -->
+                                <Grid Grid.Row="0" Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="IO by Red Square Nova SE"
+                                                   FontSize="15" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                                        <TextBlock Text="• PixArt PAW3311"
+                                                   FontSize="13" FontWeight="Normal"
+                                                   Margin="8,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </StackPanel>
+
+                                    <!-- Status Badge -->
+                                    <Border x:Name="BadgeStatusBorder" Grid.Column="1"
+                                            Background="{DynamicResource HeaderBackgroundBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="10,5"
+                                            VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Path x:Name="IconBadgeCharging"
+                                                  Width="10" Height="13"
+                                                  Stretch="Uniform"
+                                                  Margin="0,0,7,0"
+                                                  Fill="{DynamicResource AccentColorBrush}"
+                                                  Data="M7,1 L1,8 L5,8 L4,13 L10,6 L6,6 Z"
+                                                  Visibility="Collapsed" />
+                                            <Ellipse x:Name="IconBadgeDot"
+                                                     Width="7" Height="7"
+                                                     Fill="{DynamicResource AccentColorBrush}"
+                                                     Margin="0,0,7,0" />
+                                            <TextBlock x:Name="TxtBatteryStatusSmall"
+                                                       Text="ПОДКЛЮЧЕНО"
+                                                       FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource AccentColorBrush}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Battery Percentage & Description -->
+                                <Grid Grid.Row="1" Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock x:Name="TxtBatteryPercent"
+                                               Text="--%"
+                                               FontSize="52" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,24,0" />
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock x:Name="TxtConnectionTitle"
+                                                   Text="Опрос подключения..."
+                                                   FontSize="16" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                                        <TextBlock x:Name="TxtBatteryModeDesc"
+                                                   Text="Определение статуса кабеля и батареи..."
+                                                   FontSize="13" Margin="0,5,0,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Battery Gauge Bar -->
+                                <StackPanel Grid.Row="2">
+                                    <Grid x:Name="ProgTrackGrid" Height="14" SnapsToDevicePixels="True" SizeChanged="ProgTrackGrid_SizeChanged">
+                                        <Border Background="{DynamicResource TrackBrush}"
+                                                CornerRadius="7"
+                                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                                BorderThickness="1" />
+                                        <Border x:Name="BatteryBarFill"
+                                                HorizontalAlignment="Left"
+                                                CornerRadius="6"
+                                                Margin="1"
+                                                Background="{DynamicResource AccentColorBrush}"
+                                                Width="0" />
+                                    </Grid>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="0% Разряжена"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="Опрос контроллера каждые 3 сек"
+                                                   FontSize="12" HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="100% Заряжена"
+                                                   FontSize="12" HorizontalAlignment="Right"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Hardware & Status Grid (2x2 tiles) -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Характеристики оборудования"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,14" />
+
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="10" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Tile 1: Connection -->
+                                    <Border Grid.Row="0" Grid.Column="0"
+                                            Background="{DynamicResource HeaderBackgroundBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="14,12">
+                                        <StackPanel>
+                                            <TextBlock Text="ИНТЕРФЕЙС"
+                                                       FontSize="11" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextMutedBrush}" />
+                                            <TextBlock Text="2.4G Беспроводной / Type-C"
+                                                       FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       Margin="0,5,0,0" />
+                                            <TextBlock Text="Задержка 1 мс · 1000 Гц"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="0,3,0,0" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Tile 2: Sensor -->
+                                    <Border Grid.Row="0" Grid.Column="2"
+                                            Background="{DynamicResource HeaderBackgroundBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="14,12">
+                                        <StackPanel>
+                                            <TextBlock Text="ОПТИЧЕСКИЙ СЕНСОР"
+                                                       FontSize="11" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextMutedBrush}" />
+                                            <TextBlock Text="PixArt PAW3311 Optical"
+                                                       FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       Margin="0,5,0,0" />
+                                            <TextBlock Text="12 000 DPI · 300 IPS · 35G"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="0,3,0,0" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Tile 3: Switches -->
+                                    <Border Grid.Row="2" Grid.Column="0"
+                                            Background="{DynamicResource HeaderBackgroundBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="14,12">
+                                        <StackPanel>
+                                            <TextBlock Text="МИКРОПЕРЕКЛЮЧАТЕЛИ"
+                                                       FontSize="11" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextMutedBrush}" />
+                                            <TextBlock Text="Huano Blue Shell Pink Dot"
+                                                       FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       Margin="0,5,0,0" />
+                                            <TextBlock Text="Ресурс: 80 млн нажатий"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="0,3,0,0" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Tile 4: Battery Health -->
+                                    <Border Grid.Row="2" Grid.Column="2"
+                                            Background="{DynamicResource HeaderBackgroundBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="14,12">
+                                        <StackPanel>
+                                            <TextBlock Text="ЭНЕРГОСБЕРЕЖЕНИЕ"
+                                                       FontSize="11" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextMutedBrush}" />
+                                            <TextBlock Text="Smart Sleep (Авто-сон)"
+                                                       FontSize="13" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       Margin="0,5,0,0" />
+                                            <TextBlock Text="Мгновенное пробуждение"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="0,3,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Switch Lifespan & Odometer Card (Huano 80M) -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Ресурс переключателей (Huano 80 млн)"
+                                                   FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                                        <TextBlock Text="Счётчик физических нажатий ЛКМ / ПКМ и расчёт износа"
+                                                   FontSize="12" Margin="0,2,0,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </StackPanel>
+                                    <Button x:Name="BtnResetSessionClicks" Grid.Column="1"
+                                            Style="{StaticResource ModernButtonStyle}"
+                                            Padding="12,5"
+                                            ToolTip="Сбросить статистику нажатий текущей сессии"
+                                            Click="BtnResetSessionClicks_Click">
+                                        <TextBlock Text="Сброс сессии" FontSize="11" />
+                                    </Button>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Total Clicks Block -->
+                                    <Border Grid.Column="0"
+                                            Background="{DynamicResource HeaderBackgroundBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="14,12">
+                                        <StackPanel>
+                                            <TextBlock Text="ОБЩИЙ ПРОБЕГ"
+                                                       FontSize="11" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextMutedBrush}" />
+                                            <TextBlock x:Name="TxtTotalClicksVal"
+                                                       Text="0 кликов"
+                                                       FontSize="20" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       Margin="0,4,0,0" />
+                                            <TextBlock x:Name="TxtLifespanUsedVal"
+                                                       Text="0.00% ресурса (80 млн)"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource AccentColorBrush}"
+                                                       Margin="0,3,0,0" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Session Clicks Block -->
+                                    <Border Grid.Column="2"
+                                            Background="{DynamicResource HeaderBackgroundBrush}"
+                                            BorderBrush="{DynamicResource CardBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="14,12">
+                                        <StackPanel>
+                                            <TextBlock Text="ТЕКУЩАЯ СЕССИЯ"
+                                                       FontSize="11" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextMutedBrush}" />
+                                            <TextBlock x:Name="TxtSessionClicksVal"
+                                                       Text="0 кликов"
+                                                       FontSize="20" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       Margin="0,4,0,0" />
+                                            <TextBlock x:Name="TxtSessionBreakdownVal"
+                                                       Text="ЛКМ: 0 · ПКМ: 0"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       Margin="0,3,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Visual Lifespan Progress Track -->
+                                <Grid Height="6" SnapsToDevicePixels="True" x:Name="LifespanTrackGrid" SizeChanged="LifespanTrackGrid_SizeChanged">
+                                    <Border Background="{DynamicResource TrackBrush}"
+                                            CornerRadius="3" />
+                                    <Border x:Name="LifespanBarFill"
+                                            HorizontalAlignment="Left"
+                                            CornerRadius="3"
+                                            Background="{DynamicResource AccentColorBrush}"
+                                            Width="0" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Power Tip Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="16,14">
+                            <TextBlock Text="Пороги предупреждения о разряде и звуковые оповещения настраиваются во вкладке «Настройки»."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- TAB 2: AUTO-CLICKER -->
+                <ScrollViewer x:Name="PanelClicker" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,0,8">
+                        <!-- Master Toggle Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="18">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Аппаратный автокликер"
+                                               FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                    <TextBlock x:Name="TxtClickerStatus"
+                                               Text="Готов к работе (активация клавишей)"
+                                               FontSize="13" Margin="0,4,0,0"
+                                               Foreground="{DynamicResource AccentColorBrush}" />
+                                    <TextBlock Text="Имитирует непрерывные аппаратные нажатия ЛКМ на уровне Win32 API."
+                                               FontSize="12" Margin="0,4,0,0"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                </StackPanel>
+                                <CheckBox x:Name="ChkClickerMaster" Grid.Column="1"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          IsChecked="True"
+                                          Checked="ChkClickerMaster_Changed" Unchecked="ChkClickerMaster_Changed" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Speed & Anti-Cheat Settings -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Скорость кликов:"
+                                               FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                    <TextBlock x:Name="TxtCpsVal" Grid.Column="1"
+                                               Text="25 CPS (40 мс)"
+                                               FontSize="14" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentColorBrush}" />
+                                </Grid>
+                                <!-- Slider Minimum = 1 CPS -->
+                                <Slider x:Name="SliderCps"
+                                        Style="{StaticResource ModernSliderStyle}"
+                                        Minimum="1" Maximum="60" SmallChange="1" LargeChange="5"
+                                        Value="25" Margin="0,0,0,16"
+                                        ValueChanged="SliderCps_ValueChanged" />
+
+                                <CheckBox x:Name="ChkHumanizer"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          Content="Humanizer (микро-разброс задержки ±3 мс против античитов)"
+                                          Margin="0,0,0,12"
+                                          Checked="SettingChanged" Unchecked="SettingChanged" />
+
+                                <CheckBox x:Name="ChkClickerAudio"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          Content="Звуковой щелчок при включении кликера"
+                                          Checked="SettingChanged" Unchecked="SettingChanged" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Mode & Key Binding Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Клавиша и режим активации"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,14" />
+
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Клавиша активации:"
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                                        <TextBlock Text="Зажмите эту клавишу и ЛКМ для активации кликов"
+                                                   FontSize="12" Margin="0,3,0,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </StackPanel>
+                                    <Button x:Name="BtnChangeKey" Grid.Column="1"
+                                            Style="{StaticResource ModernButtonStyle}"
+                                            Padding="16,8"
+                                            Click="BtnChangeKey_Click">
+                                        <TextBlock x:Name="TxtKeyName" Text="Ё ( ~ )" FontWeight="Bold" />
+                                    </Button>
+                                </Grid>
+
+                                <!-- Mode Selection -->
+                                <TextBlock Text="Режим работы:"
+                                           FontSize="13" Margin="0,0,0,10"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="RadioModeHold"
+                                                 Style="{StaticResource ModernRadioButtonStyle}"
+                                                 Content="Удержание (Hold): кликает пока зажато"
+                                                 IsChecked="True"
+                                                 Margin="0,0,24,0"
+                                                 Checked="RadioMode_Checked" />
+                                    <RadioButton x:Name="RadioModeToggle"
+                                                 Style="{StaticResource ModernRadioButtonStyle}"
+                                                 Content="Переключатель (Toggle): вкл/выкл по нажатию"
+                                                 Checked="RadioMode_Checked" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Interactive Click Testing Ground -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Интерактивный полигон кликера"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,4" />
+                                <TextBlock Text="Зажмите клавишу активации + ЛКМ на кнопке для проверки скорости:"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Margin="0,0,0,12" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="10" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button x:Name="BtnTestClick" Grid.Column="0"
+                                            Style="{StaticResource AccentButtonStyle}"
+                                            Height="46"
+                                            Click="BtnTestClick_Click">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Тестовая зона клика — Нажатий: " FontSize="13" />
+                                            <TextBlock x:Name="TxtTestClickCount" Text="0" FontSize="14" FontWeight="Bold" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button x:Name="BtnResetTestClick" Grid.Column="2"
+                                            Style="{StaticResource ModernButtonStyle}"
+                                            Height="46"
+                                            Padding="18,0"
+                                            Content="Сбросить"
+                                            Click="BtnResetTestClick_Click" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- TAB 3: SETTINGS -->
+                <ScrollViewer x:Name="PanelSettings" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,0,0,8">
+                        <!-- Appearance Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Оформление интерфейса"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,12" />
+
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="RadioThemeDark"
+                                                 Style="{StaticResource ModernRadioButtonStyle}"
+                                                 Content="Тёмная тема (Dark Precision)"
+                                                 IsChecked="True"
+                                                 Margin="0,0,24,0"
+                                                 Checked="RadioTheme_Checked" />
+                                    <RadioButton x:Name="RadioThemeLight"
+                                                 Style="{StaticResource ModernRadioButtonStyle}"
+                                                 Content="Светлая пастельная (Beige-Gray)"
+                                                 Checked="RadioTheme_Checked" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- System Integration Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Системная интеграция"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,12" />
+
+                                <CheckBox x:Name="ChkStartup"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          Content="Запускать Mouse Control вместе с Windows"
+                                          Margin="0,0,0,10"
+                                          Checked="ChkStartup_Changed" Unchecked="ChkStartup_Changed" />
+
+                                <CheckBox x:Name="ChkMinimizeOnClose"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          Content="Сворачивать в системный трей при закрытии крестиком"
+                                          IsChecked="True"
+                                          Checked="SettingChanged" Unchecked="SettingChanged" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Debounce / Anti-Double-Click Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Анти-даблклик (Фильтр дребезга)"
+                                                   FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                                        <TextBlock Text="Подавление ложных повторных кликов при износе контактов переключателей"
+                                                   FontSize="12" Margin="0,2,0,0"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </StackPanel>
+                                    <CheckBox x:Name="ChkDebounceMaster" Grid.Column="1"
+                                              Style="{StaticResource ModernToggleSwitchStyle}"
+                                              IsChecked="True"
+                                              Checked="ChkDebounceMaster_Changed" Unchecked="ChkDebounceMaster_Changed" />
+                                </Grid>
+
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Порог отсечения дребезга:"
+                                               FontSize="13" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                    <TextBlock x:Name="TxtDebounceVal" Grid.Column="1"
+                                               Text="20 мс (рекомендуется для Huano)"
+                                               FontSize="13" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentColorBrush}" />
+                                </Grid>
+                                <Slider x:Name="SliderDebounce"
+                                        Style="{StaticResource ModernSliderStyle}"
+                                        Minimum="5" Maximum="40" SmallChange="1" LargeChange="5"
+                                        Value="20" Margin="0,0,0,10"
+                                        ValueChanged="SliderDebounce_ValueChanged" />
+                                <TextBlock Text="Алгоритм моментальной фиксации первого клика (0 мс задержки). Фильтр блокирует паразитные микро-замыкания без снижения скорости стрельбы."
+                                           FontSize="12" Margin="0,0,0,0" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Battery Notifications & Thresholds Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Уведомления и пороги батареи"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,4" />
+                                <TextBlock Text="Настройте уровни заряда, при которых программа предупредит вас о разряде:"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           Margin="0,0,0,14" />
+
+                                <!-- Threshold 1 -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Предупреждение о низком заряде:"
+                                               FontSize="13" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                    <TextBlock x:Name="TxtThresh1Val" Grid.Column="1"
+                                               Text="20%" FontSize="14" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentColorBrush}" />
+                                </Grid>
+                                <Slider x:Name="SliderThresh1"
+                                        Style="{StaticResource ModernSliderStyle}"
+                                        Minimum="10" Maximum="40" SmallChange="1" LargeChange="5"
+                                        Value="20" Margin="0,0,0,16"
+                                        ValueChanged="SliderThresh1_ValueChanged" />
+
+                                <!-- Threshold 2 (Critical) -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Критический порог разряда:"
+                                               FontSize="13" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                                    <TextBlock x:Name="TxtThresh2Val" Grid.Column="1"
+                                               Text="10%" FontSize="14" FontWeight="Bold"
+                                               Foreground="#EF4444" />
+                                </Grid>
+                                <Slider x:Name="SliderThresh2"
+                                        Style="{StaticResource ModernSliderStyle}"
+                                        Minimum="5" Maximum="20" SmallChange="1" LargeChange="5"
+                                        Value="10" Margin="0,0,0,18"
+                                        ValueChanged="SliderThresh2_ValueChanged" />
+
+                                <!-- Toggles -->
+                                <CheckBox x:Name="ChkSoundAlert"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          Content="Звуковой сигнал при низком заряде (для игр в полный экран)"
+                                          Margin="0,0,0,10"
+                                          Checked="SettingChanged" Unchecked="SettingChanged" />
+
+                                <CheckBox x:Name="ChkToastAlert"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          Content="Всплывающее системное уведомление Windows"
+                                          Margin="0,0,0,10"
+                                          Checked="SettingChanged" Unchecked="SettingChanged" />
+
+                                <CheckBox x:Name="ChkFullChargeAlert"
+                                          Style="{StaticResource ModernToggleSwitchStyle}"
+                                          Content="Оповещение о 100% зарядке (провод можно снять)"
+                                          Checked="SettingChanged" Unchecked="SettingChanged" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Hardware Info & About Card -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Margin="0,12,0,0"
+                                Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="О мыши и оборудовании"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,0,0,8" />
+                                <TextBlock Text="IO by Red Square Nova SE • Сенсор PixArt PAW3311 (до 12 000 DPI)"
+                                           FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                                <TextBlock Text="Hardware ID: VID: 1D57 | PID: FA60. Настройки DPI и сенсора хранятся в энергонезависимой памяти мыши."
+                                           FontSize="12" Margin="0,4,0,12" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+
+                                <Button Style="{StaticResource ModernButtonStyle}"
+                                        HorizontalAlignment="Left"
+                                        Content="Открыть резервную копию софта"
+                                        Click="BtnOpenBackup_Click" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
