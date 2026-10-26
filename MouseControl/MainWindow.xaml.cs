@@ -682,7 +682,7 @@ namespace MouseControl
                     : 800;
 
                 var driver = ((App)Application.Current).MouseDriver;
-                bool hwSent = driver?.SendActiveDpiStage(stage) == true;
+                bool hwSent = driver?.SendActiveDpiStage(stage, _settings) == true;
 
                 TxtSensorApplyStatus.Text = hwSent
                     ? $"✓ Мышь переключена: Ступень {stage} ({activeDpi} DPI)"

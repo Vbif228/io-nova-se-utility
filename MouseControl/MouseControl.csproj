@@ -24,8 +24,9 @@
     </None>
     <None Update="hiddriver_1.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
     </None>
+    <EmbeddedResource Include="hiddriver_1.dll" />
   </ItemGroup>
 
 </Project>

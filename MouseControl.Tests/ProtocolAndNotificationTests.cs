@@ -342,5 +342,43 @@ namespace MouseControl.Tests
             // Returns false cleanly in headless environment without crashing
             Assert.False(result);
         }
+
+        [Fact]
+        public void ProcessBatteryUpdate_ZeroPercent_DoesNotTriggerNotification()
+        {
+            var settings = new AppSettings
+            {
+                BatteryNotificationAlert = true,
+                BatteryWarningThreshold1 = 20,
+                BatteryWarningThreshold2 = 10
+            };
+            var notifier = new NotificationManager(settings);
+
+            // 0% indicates sleep mode or disconnection artifact, must not trigger low battery warning
+            notifier.ProcessBatteryUpdate(0, isCharging: false, isConnected: true);
+            notifier.ProcessBatteryUpdate(-1, isCharging: false, isConnected: true);
+            notifier.ProcessBatteryUpdate(101, isCharging: false, isConnected: true);
+        }
+
+        [Fact]
+        public void ProcessBatteryUpdate_SuddenDrop_RequiresConsecutiveReports()
+        {
+            var settings = new AppSettings
+            {
+                BatteryNotificationAlert = true,
+                BatteryWarningThreshold1 = 20,
+                BatteryWarningThreshold2 = 10
+            };
+            var notifier = new NotificationManager(settings);
+
+            // Initial healthy state
+            notifier.ProcessBatteryUpdate(100, isCharging: false, isConnected: true);
+
+            // Sudden drop (single report) is held for confirmation
+            notifier.ProcessBatteryUpdate(15, isCharging: false, isConnected: true);
+
+            // Second consecutive report confirms real discharge
+            notifier.ProcessBatteryUpdate(15, isCharging: false, isConnected: true);
+        }
     }
 }

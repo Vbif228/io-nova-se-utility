@@ -1,3 +1,4 @@
+using System.Reflection;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -88,16 +89,51 @@ namespace MouseControl.Native
             private set { lock (_stateLock) _isWired = value; }
         }
 
-        public bool Initialize()
+        private static string EnsureDriverDllExists()
         {
             string appDir = AppDomain.CurrentDomain.BaseDirectory;
-            string dllPath = Path.Combine(appDir, "hiddriver_1.dll");
+            string primaryPath = Path.Combine(appDir, "hiddriver_1.dll");
+            if (File.Exists(primaryPath)) return primaryPath;
 
-            if (!File.Exists(dllPath))
+            string cwdPath = Path.Combine(Environment.CurrentDirectory, "hiddriver_1.dll");
+            if (File.Exists(cwdPath)) return cwdPath;
+
+            string devPath = Path.GetFullPath(Path.Combine(appDir, @"..\..\..\Original_Driver\hiddriver_1.dll"));
+            if (File.Exists(devPath)) return devPath;
+
+            string localAppDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "MouseControl");
+            string localAppDataPath = Path.Combine(localAppDataDir, "hiddriver_1.dll");
+            if (File.Exists(localAppDataPath)) return localAppDataPath;
+
+            try
             {
-                dllPath = Path.GetFullPath(Path.Combine(appDir, @"..\..\..\Original_Driver\hiddriver_1.dll"));
+                var asm = Assembly.GetExecutingAssembly();
+                using var stream = asm.GetManifestResourceStream("MouseControl.hiddriver_1.dll");
+                if (stream != null)
+                {
+                    try
+                    {
+                        using var fs = new FileStream(primaryPath, FileMode.Create, FileAccess.Write);
+                        stream.CopyTo(fs);
+                        return primaryPath;
+                    }
+                    catch
+                    {
+                        Directory.CreateDirectory(localAppDataDir);
+                        using var fs = new FileStream(localAppDataPath, FileMode.Create, FileAccess.Write);
+                        stream.CopyTo(fs);
+                        return localAppDataPath;
+                    }
+                }
             }
+            catch { }
 
+            return primaryPath;
+        }
+
+        public bool Initialize()
+        {
+            string dllPath = EnsureDriverDllExists();
             if (!File.Exists(dllPath))
                 return false;
 
@@ -424,6 +460,7 @@ namespace MouseControl.Native
                             {
                                 _currentBattery = battery;
                             }
+
                             _isCharging = charging;
                             _isConnected = connected;
 
@@ -579,44 +616,16 @@ namespace MouseControl.Native
 
         #region Hardware Feature Commands (DPI & Sensor Settings)
 
-        public bool SendActiveDpiStage(int stage)
+        public bool SendActiveDpiStage(int stage, AppSettings? settings = null)
         {
             if (stage < 1 || stage > 6) return false;
-            if (_setFeature == null || _openFeature == null || _closeFeature == null)
-                return false;
 
-            lock (_featureLock)
-            {
-                try
-                {
-                    if (_openFeature() == 0) return false;
+            var cfg = settings != null
+                ? settings
+                : new AppSettings { SensorActiveDpiStage = stage };
+            cfg.SensorActiveDpiStage = stage;
 
-                    byte[] report = new byte[9];
-                    report[0] = 0x09; // Report ID 9
-                    report[1] = 0x06; // Command 0x06: Switch active DPI stage
-                    report[2] = 0x01;
-                    byte stageByte = (byte)(stage - 1); // 0-based index
-                    report[3] = stageByte;
-                    report[4] = (byte)(~stageByte);
-
-                    IntPtr pReport = Marshal.AllocHGlobal(report.Length);
-                    try
-                    {
-                        Marshal.Copy(report, 0, pReport, report.Length);
-                        int res = _setFeature(pReport, report.Length);
-                        return res != 0;
-                    }
-                    finally
-                    {
-                        Marshal.FreeHGlobal(pReport);
-                        _closeFeature();
-                    }
-                }
-                catch
-                {
-                    return false;
-                }
-            }
+            return SendSensorConfiguration(cfg);
         }
 
         public bool SendSensorConfiguration(AppSettings settings)
@@ -629,6 +638,18 @@ namespace MouseControl.Native
             {
                 try
                 {
+                    // Ensure Set_VIDPID is synchronized before opening feature device
+                    bool wired;
+                    lock (_stateLock) { wired = _isWired; }
+                    if (wired)
+                    {
+                        _setVidPid?.Invoke(0x1D57, 0x2015);
+                    }
+                    else
+                    {
+                        _setVidPid?.Invoke(0x1D57, 0xFA60);
+                    }
+
                     if (_openFeature() == 0) return false;
 
                     byte[] report = new byte[56];

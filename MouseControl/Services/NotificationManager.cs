@@ -17,6 +17,8 @@ namespace MouseControl.Services
         private bool _warnedThreshold1 = false;
         private bool _warnedThreshold2 = false;
         private bool _warnedFullCharge = false;
+        private int _lastValidBattery = -1;
+        private int _consecutiveLowReports = 0;
 
         public NotificationManager(AppSettings settings)
         {
@@ -42,13 +44,16 @@ namespace MouseControl.Services
 
         public void ProcessBatteryUpdate(int percentage, bool isCharging, bool isConnected)
         {
-            if (!isConnected || percentage < 0) return;
+            // Defensive: percentage <= 0 is a sleep/disconnected glitch or invalid HID reading
+            if (!isConnected || percentage <= 0 || percentage > 100) return;
 
             if (isCharging)
             {
                 // Reset low warnings when connected to cable
                 _warnedThreshold1 = false;
                 _warnedThreshold2 = false;
+                _consecutiveLowReports = 0;
+                _lastValidBattery = percentage;
 
                 if (percentage >= 100 && !_warnedFullCharge)
                 {
@@ -67,6 +72,24 @@ namespace MouseControl.Services
             {
                 // Discharging
                 _warnedFullCharge = false;
+
+                // Glitch filter: If previous reading was high/healthy (>30%) and drops abruptly to <= threshold,
+                // require 2 consecutive reports before triggering balloon/sound alert to avoid single-packet wakeup glitches.
+                bool isSuddenDrop = (_lastValidBattery > 30 && percentage <= _settings.BatteryWarningThreshold1);
+                if (isSuddenDrop)
+                {
+                    _consecutiveLowReports++;
+                    if (_consecutiveLowReports < 2)
+                    {
+                        return; // Await confirmation
+                    }
+                }
+                else
+                {
+                    _consecutiveLowReports = 0;
+                }
+
+                _lastValidBattery = percentage;
 
                 // Threshold 2 (Critical, e.g. <= 10%)
                 if (percentage <= _settings.BatteryWarningThreshold2)
@@ -102,6 +125,7 @@ namespace MouseControl.Services
                     // Battery is healthy above thresholds
                     _warnedThreshold1 = false;
                     _warnedThreshold2 = false;
+                    _consecutiveLowReports = 0;
                 }
             }
         }

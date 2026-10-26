@@ -33,6 +33,7 @@ Name: "autostart"; Description: "Запускать Mouse Control вместе �
 
 [Files]
 Source: "..\MouseControl\bin\Publish\*"; DestDir: "{app}"; Flags: ignoreversion; Excludes: "*.pdb"
+Source: "..\MouseControl\hiddriver_1.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\app.ico"
