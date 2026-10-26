@@ -782,25 +782,21 @@ namespace MouseControl.Native
                     if (_openFeature() == 0) return false;
 
                     byte[] sensorReport = BuildSensorReport(settings);
-                    byte[] pollingReport = BuildPollingRateReport(settings.SensorPollingRate);
-
                     IntPtr pSensor = Marshal.AllocHGlobal(sensorReport.Length);
-                    IntPtr pPolling = Marshal.AllocHGlobal(pollingReport.Length);
 
                     try
                     {
                         Marshal.Copy(sensorReport, 0, pSensor, sensorReport.Length);
                         int resSensor = _setFeature(pSensor, sensorReport.Length);
 
-                        Marshal.Copy(pollingReport, 0, pPolling, pollingReport.Length);
-                        _setFeature(pPolling, pollingReport.Length);
+                        // Allow mouse MCU firmware sufficient time to commit settings (matches OEM Mouse.exe behavior)
+                        Thread.Sleep(300);
 
                         return resSensor != 0;
                     }
                     finally
                     {
                         Marshal.FreeHGlobal(pSensor);
-                        Marshal.FreeHGlobal(pPolling);
                         _closeFeature();
                     }
                 }
