@@ -823,6 +823,7 @@ namespace MouseControl
         private void BtnResetSensorDefaults_Click(object sender, RoutedEventArgs e)
         {
             _settings.SensorDpiStages = new int[] { 400, 800, 1600, 2400, 3200, 6400 };
+            _settings.SensorDpiColors = new string[] { "#EF4444", "#10B981", "#3B82F6", "#EAB308", "#06B6D4", "#A855F7" };
             _settings.SensorActiveDpiStage = 2; // 800 DPI
             _settings.SensorPollingRate = 1000;
             _settings.SensorLod = "1mm";

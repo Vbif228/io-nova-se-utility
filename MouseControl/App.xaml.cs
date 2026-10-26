@@ -162,7 +162,6 @@ namespace MouseControl
                         }
 
                         MainWindowInstance?.UpdateActiveDpiStage(stage);
-                        NotificationManager?.ProcessDpiUpdate(stage, currentDpi);
                         TrayManager?.UpdateDpiDisplay(stage, currentDpi);
                     });
                 }

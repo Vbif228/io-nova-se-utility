@@ -616,6 +616,135 @@ namespace MouseControl.Native
 
         #region Hardware Feature Commands (DPI & Sensor Settings)
 
+        /// <summary>
+        /// Sensor calibration register lookup table extracted directly from IO Nova SE original driver (Mouse.exe at 0x41C448).
+        /// Contains 220 8-bit calibration registers corresponding to DPI steps from 50 DPI (step 1) up to 11 000 DPI (step 220).
+        /// </summary>
+        public static readonly byte[] DpiRegisterTable = new byte[220]
+        {
+            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0E, 0x0F, 0x10, 0x11, 0x12,
+            0x13, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x22, 0x23, 0x24, 0x25,
+            0x26, 0x27, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2F, 0x30, 0x31, 0x32, 0x33, 0x34, 0x36, 0x37, 0x38,
+            0x39, 0x3A, 0x3B, 0x3D, 0x3E, 0x3F, 0x40, 0x41, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x4A, 0x4B,
+            0x4C, 0x4D, 0x4E, 0x4F, 0x51, 0x52, 0x53, 0x54, 0x55, 0x57, 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5E,
+            0x5F, 0x60, 0x61, 0x62, 0x63, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70,
+            0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7F, 0x80, 0x81, 0x82, 0x83,
+            0x84, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8D, 0x8E, 0x8F, 0x90, 0x91, 0x93, 0x94, 0x95, 0x96,
+            0x97, 0x98, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E, 0x9F, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA7, 0xA8, 0xA9,
+            0xAA, 0xAB, 0xAC, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBB, 0xBC,
+            0xBD, 0xBE, 0xBF, 0xC0, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCF,
+            0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA, 0xDB, 0xDD, 0xDE, 0xDF, 0xE0, 0xE1,
+            0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xEA, 0xEB, 0x76, 0x77, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7F,
+            0x80, 0x81, 0x82, 0x83, 0x84, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8D
+        };
+
+        internal static (byte r, byte g, byte b) GetStageColorRgb(AppSettings settings, int stageIndex)
+        {
+            if (settings?.SensorDpiColors != null && stageIndex < settings.SensorDpiColors.Length)
+            {
+                string hex = settings.SensorDpiColors[stageIndex]?.TrimStart('#') ?? "";
+                if (hex.Length == 6 &&
+                    byte.TryParse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber, null, out byte r) &&
+                    byte.TryParse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber, null, out byte g) &&
+                    byte.TryParse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber, null, out byte b))
+                {
+                    return (r, g, b);
+                }
+            }
+
+            return stageIndex switch
+            {
+                0 => (0xEF, 0x44, 0x44), // Stage 1: Red
+                1 => (0x10, 0xB9, 0x81), // Stage 2: Green
+                2 => (0x3B, 0x82, 0xF6), // Stage 3: Blue
+                3 => (0xEA, 0xB3, 0x08), // Stage 4: Yellow
+                4 => (0x06, 0xB6, 0xD4), // Stage 5: Cyan
+                5 => (0xA8, 0x55, 0xF7), // Stage 6: Magenta/Purple
+                6 => (0xFF, 0x80, 0x00), // Stage 7: Orange
+                7 => (0xFF, 0xFF, 0xFF), // Stage 8: White
+                _ => (0xFF, 0xFF, 0xFF)
+            };
+        }
+
+        internal static byte[] BuildSensorReport(AppSettings settings)
+        {
+            byte[] report = new byte[56];
+            report[0] = 0x04; // Report ID 4
+            report[1] = 0x38; // Length 56 (0x38 bytes)
+            report[2] = 0x01;
+
+            int activeStage = Math.Clamp(settings.SensorActiveDpiStage, 1, 6);
+            report[3] = (byte)(activeStage - 1); // active stage (0-based: 0..5)
+            report[4] = 0x06; // 6 stages total
+            report[5] = 0x3F; // stages 1-6 enabled mask (0b00111111)
+            report[6] = 0x00;
+            report[7] = 0x00;
+
+            // Stages 1-6 DPI values translated via PAW3311 register calibration table
+            int[] dpiStages = settings.SensorDpiStages ?? new int[] { 400, 800, 1600, 2400, 3200, 6400 };
+            for (int i = 0; i < 8; i++)
+            {
+                if (i < 6 && i < dpiStages.Length)
+                {
+                    int dpi = dpiStages[i];
+                    int step = Math.Clamp(dpi / 50, 1, 220); // 50 to 11000 DPI
+                    byte regVal = DpiRegisterTable[step - 1];
+                    report[8 + i] = regVal;
+                    report[16 + i] = (byte)(step > 200 ? 1 : 0); // High-DPI flag (>10 000 DPI)
+                }
+                else
+                {
+                    report[8 + i] = 0x00;
+                    report[16 + i] = 0x00;
+                }
+            }
+
+            // Byte 24: Active stage index (1-based: 1..6)
+            report[24] = (byte)activeStage;
+
+            // Bytes 25..48: 8 RGB color sets (3 bytes each * 8 stages = 24 bytes)
+            for (int i = 0; i < 8; i++)
+            {
+                var (r, g, b) = GetStageColorRgb(settings, i);
+                report[25 + i * 3] = r;
+                report[26 + i * 3] = g;
+                report[27 + i * 3] = b;
+            }
+
+            report[49] = 0x01;
+
+            // 16-bit word sum checksum over bytes 3..49 (exact match to Mouse.exe 0x4143d0)
+            ushort checksum = 0;
+            for (int i = 3; i < 50; i++)
+            {
+                checksum += report[i];
+            }
+            report[50] = (byte)(checksum >> 8);
+            report[51] = (byte)(checksum & 0xFF);
+
+            return report;
+        }
+
+        internal static byte[] BuildPollingRateReport(int pollingRate)
+        {
+            byte interval = pollingRate switch
+            {
+                125 => 8,
+                250 => 4,
+                500 => 2,
+                _ => 1
+            };
+
+            byte[] report = new byte[9];
+            report[0] = 0x06; // Report ID 6
+            report[1] = 0x09; // Length 9
+            report[2] = 0x01;
+            report[3] = interval;
+            report[4] = (byte)(~interval);
+
+            return report;
+        }
+
         public bool SendActiveDpiStage(int stage, AppSettings? settings = null)
         {
             if (stage < 1 || stage > 6) return false;
@@ -652,67 +781,26 @@ namespace MouseControl.Native
 
                     if (_openFeature() == 0) return false;
 
-                    byte[] report = new byte[56];
-                    report[0] = 0x04; // Report ID 4
-                    report[1] = 0x38; // Length 56 (0x38 bytes)
-                    report[2] = 0x01;
-                    int activeStage = Math.Clamp(settings.SensorActiveDpiStage, 1, 6);
-                    report[3] = (byte)(activeStage - 1); // active stage (0-based)
-                    report[4] = 0x06; // 6 stages total
-                    report[5] = 0x3F; // stages 1-6 enabled mask (0b00111111)
+                    byte[] sensorReport = BuildSensorReport(settings);
+                    byte[] pollingReport = BuildPollingRateReport(settings.SensorPollingRate);
 
-                    // Stages 1-6 DPI values in 50 DPI units
-                    int[] dpiStages = settings.SensorDpiStages ?? new int[] { 400, 800, 1600, 2400, 3200, 6400 };
-                    for (int i = 0; i < 6 && i < dpiStages.Length; i++)
-                    {
-                        int steps = Math.Clamp(dpiStages[i] / 50, 2, 240); // 100 to 12 000 DPI
-                        report[8 + i] = (byte)steps;
-                        report[16 + i] = 0x01; // Stage enabled
-                    }
+                    IntPtr pSensor = Marshal.AllocHGlobal(sensorReport.Length);
+                    IntPtr pPolling = Marshal.AllocHGlobal(pollingReport.Length);
 
-                    // Polling Rate (report[24]): 125Hz = 0, 250Hz = 1, 500Hz = 2, 1000Hz = 3
-                    report[24] = settings.SensorPollingRate switch
-                    {
-                        125 => 0,
-                        250 => 1,
-                        500 => 2,
-                        _ => 3
-                    };
-
-                    // Default DPI LED Colors (RGB per stage, 3 bytes each * 6 stages = 18 bytes from 25 to 42)
-                    byte[] defaultColors = new byte[] {
-                        0xFF, 0x00, 0x00, // Stage 1: Red
-                        0x00, 0xFF, 0x00, // Stage 2: Green
-                        0x00, 0x00, 0xFF, // Stage 3: Blue
-                        0xFF, 0xFF, 0x00, // Stage 4: Yellow
-                        0x00, 0xFF, 0xFF, // Stage 5: Cyan
-                        0xFF, 0x00, 0xFF  // Stage 6: Magenta
-                    };
-                    Buffer.BlockCopy(defaultColors, 0, report, 25, defaultColors.Length);
-
-                    // LOD (report[48]): 1mm = 0, 2mm = 1
-                    report[48] = (byte)(settings.SensorLod == "2mm" ? 1 : 0);
-                    report[49] = 0x01;
-
-                    // 16-bit word checksum over bytes 0..49
-                    ushort checksum = 0;
-                    for (int i = 0; i < 50; i++)
-                    {
-                        checksum += report[i];
-                    }
-                    report[50] = (byte)(checksum >> 8);
-                    report[51] = (byte)(checksum & 0xFF);
-
-                    IntPtr pReport = Marshal.AllocHGlobal(report.Length);
                     try
                     {
-                        Marshal.Copy(report, 0, pReport, report.Length);
-                        int res = _setFeature(pReport, report.Length);
-                        return res != 0;
+                        Marshal.Copy(sensorReport, 0, pSensor, sensorReport.Length);
+                        int resSensor = _setFeature(pSensor, sensorReport.Length);
+
+                        Marshal.Copy(pollingReport, 0, pPolling, pollingReport.Length);
+                        _setFeature(pPolling, pollingReport.Length);
+
+                        return resSensor != 0;
                     }
                     finally
                     {
-                        Marshal.FreeHGlobal(pReport);
+                        Marshal.FreeHGlobal(pSensor);
+                        Marshal.FreeHGlobal(pPolling);
                         _closeFeature();
                     }
                 }

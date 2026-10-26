@@ -229,13 +229,97 @@ namespace MouseControl.Tests
         }
 
         [Fact]
-        public void AppSettings_DpiNotificationAlert_DefaultsToTrue_AndPersists()
+        public void AppSettings_DpiNotificationAlert_DefaultsToFalse_AndPersists()
         {
             var settings = new AppSettings();
-            Assert.True(settings.DpiNotificationAlert);
+            Assert.False(settings.DpiNotificationAlert, "DPI notification alert must be disabled by default to eliminate toast spam!");
 
-            settings.DpiNotificationAlert = false;
-            Assert.False(settings.DpiNotificationAlert);
+            settings.DpiNotificationAlert = true;
+            Assert.True(settings.DpiNotificationAlert);
+        }
+
+        [Fact]
+        public void BuildSensorReport_ValidatesDpiCalibrationTable_AndRegisters()
+        {
+            var settings = new AppSettings
+            {
+                SensorActiveDpiStage = 2,
+                SensorDpiStages = new int[] { 400, 800, 1600, 3200, 6400, 11000 },
+                SensorDpiColors = new string[] { "#EF4444", "#10B981", "#3B82F6", "#EAB308", "#06B6D4", "#A855F7" }
+            };
+
+            byte[] report = MouseDriver.BuildSensorReport(settings);
+
+            Assert.Equal(56, report.Length);
+            Assert.Equal(0x04, report[0]); // Report ID
+            Assert.Equal(0x38, report[1]); // Length 56
+            Assert.Equal(0x01, report[2]);
+            Assert.Equal(1, report[3]); // Active stage 2 (0-based = 1)
+            Assert.Equal(6, report[4]); // 6 stages total
+            Assert.Equal(0x3F, report[5]); // Mask for stages 1..6
+
+            // PAW3311 register calibrations from Mouse.exe lookup table:
+            // 400 DPI (step 8) -> table[7] = 0x09
+            Assert.Equal(0x09, report[8]);
+            Assert.Equal(0x00, report[16]); // Low DPI flag
+
+            // 800 DPI (step 16) -> table[15] = 0x12
+            Assert.Equal(0x12, report[9]);
+            Assert.Equal(0x00, report[17]);
+
+            // 1600 DPI (step 32) -> table[31] = 0x25
+            Assert.Equal(0x25, report[10]);
+            Assert.Equal(0x00, report[18]);
+
+            // 3200 DPI (step 64) -> table[63] = 0x4B
+            Assert.Equal(0x4B, report[11]);
+            Assert.Equal(0x00, report[19]);
+
+            // 6400 DPI (step 128) -> table[127] = 0x96
+            Assert.Equal(0x96, report[12]);
+            Assert.Equal(0x00, report[20]);
+
+            // 11000 DPI (step 220) -> table[219] = 0x8D, High-DPI flag = 1
+            Assert.Equal(0x8D, report[13]);
+            Assert.Equal(0x01, report[21]);
+
+            // Active stage 1-based at byte 24:
+            Assert.Equal(2, report[24]);
+
+            // Stage colors in bytes 25..48 (Stage 1: #EF4444 -> 0xEF, 0x44, 0x44)
+            Assert.Equal(0xEF, report[25]);
+            Assert.Equal(0x44, report[26]);
+            Assert.Equal(0x44, report[27]);
+
+            // Stage 2: #10B981 -> 0x10, 0xB9, 0x81
+            Assert.Equal(0x10, report[28]);
+            Assert.Equal(0xB9, report[29]);
+            Assert.Equal(0x81, report[30]);
+
+            // Byte 49 is 0x01
+            Assert.Equal(0x01, report[49]);
+
+            // Verify checksum matches word sum over bytes 3..49
+            ushort expectedSum = 0;
+            for (int i = 3; i < 50; i++) expectedSum += report[i];
+            Assert.Equal((byte)(expectedSum >> 8), report[50]);
+            Assert.Equal((byte)(expectedSum & 0xFF), report[51]);
+        }
+
+        [Theory]
+        [InlineData(125, 8)]
+        [InlineData(250, 4)]
+        [InlineData(500, 2)]
+        [InlineData(1000, 1)]
+        public void BuildPollingRateReport_EncodesExpectedIntervalAndComplement(int hz, byte expectedInterval)
+        {
+            byte[] report = MouseDriver.BuildPollingRateReport(hz);
+            Assert.Equal(9, report.Length);
+            Assert.Equal(0x06, report[0]); // Report ID 6
+            Assert.Equal(0x09, report[1]); // Length 9
+            Assert.Equal(0x01, report[2]);
+            Assert.Equal(expectedInterval, report[3]);
+            Assert.Equal((byte)(~expectedInterval), report[4]);
         }
 
         [Fact]

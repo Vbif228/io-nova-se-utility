@@ -26,7 +26,7 @@ namespace MouseControl.Models
         // Sensor & DPI Configuration (PixArt PAW3311 up to 12 000 DPI)
         public int SensorActiveDpiStage { get; set; } = 2; // 1 to 6 (default stage 2: 800 DPI)
         public int[] SensorDpiStages { get; set; } = new int[] { 400, 800, 1600, 2400, 3200, 6400 };
-        public string[] SensorDpiColors { get; set; } = new string[] { "#EF4444", "#10B981", "#3B82F6", "#F59E0B", "#06B6D4", "#8B5CF6" };
+        public string[] SensorDpiColors { get; set; } = new string[] { "#EF4444", "#10B981", "#3B82F6", "#EAB308", "#06B6D4", "#A855F7" };
         public int SensorPollingRate { get; set; } = 1000; // 125, 250, 500, 1000 Hz
         public string SensorLod { get; set; } = "1mm"; // "1mm" or "2mm"
         public int SensorKeyDebounceMs { get; set; } = 4; // 2 to 20 ms hardware debounce
@@ -48,7 +48,7 @@ namespace MouseControl.Models
         public bool BatterySoundAlert { get; set; } = true;
         public bool BatteryNotificationAlert { get; set; } = true;
         public bool BatteryNotifyFullCharge { get; set; } = true;
-        public bool DpiNotificationAlert { get; set; } = true;
+        public bool DpiNotificationAlert { get; set; } = false;
 
         private static readonly object _fileLock = new();
         private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
@@ -74,7 +74,7 @@ namespace MouseControl.Models
                             if (loaded.SensorDpiStages == null || loaded.SensorDpiStages.Length != 6)
                                 loaded.SensorDpiStages = new int[] { 400, 800, 1600, 2400, 3200, 6400 };
                             if (loaded.SensorDpiColors == null || loaded.SensorDpiColors.Length != 6)
-                                loaded.SensorDpiColors = new string[] { "#EF4444", "#10B981", "#3B82F6", "#F59E0B", "#06B6D4", "#8B5CF6" };
+                                loaded.SensorDpiColors = new string[] { "#EF4444", "#10B981", "#3B82F6", "#EAB308", "#06B6D4", "#A855F7" };
                             if (loaded.SensorActiveDpiStage < 1 || loaded.SensorActiveDpiStage > 6)
                                 loaded.SensorActiveDpiStage = 2;
                             if (string.IsNullOrEmpty(loaded.SensorLod))
