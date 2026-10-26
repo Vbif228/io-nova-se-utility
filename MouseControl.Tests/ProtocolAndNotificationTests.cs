@@ -254,8 +254,8 @@ namespace MouseControl.Tests
             Assert.Equal(0x04, report[0]); // Report ID
             Assert.Equal(0x38, report[1]); // Length 56
             Assert.Equal(0x01, report[2]);
-            Assert.Equal(1, report[3]); // Active stage 2 (0-based = 1)
-            Assert.Equal(6, report[4]); // 6 stages total
+            Assert.Equal(0, report[3]); // Angle Snapping (0 = Off per Mouse.exe 0x4141d5)
+            Assert.Equal(0, report[4]); // Ripple Control (0 = Off per Mouse.exe 0x4141df)
             Assert.Equal(0x3F, report[5]); // Mask for stages 1..6
 
             // PAW3311 register calibrations from Mouse.exe lookup table:

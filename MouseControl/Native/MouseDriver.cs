@@ -638,7 +638,7 @@ namespace MouseControl.Native
             0x80, 0x81, 0x82, 0x83, 0x84, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8D
         };
 
-        internal static (byte r, byte g, byte b) GetStageColorRgb(AppSettings settings, int stageIndex)
+        internal static (byte r, byte g, byte b) GetStageColorRgb(AppSettings? settings, int stageIndex)
         {
             if (settings?.SensorDpiColors != null && stageIndex < settings.SensorDpiColors.Length)
             {
@@ -673,15 +673,16 @@ namespace MouseControl.Native
             report[1] = 0x38; // Length 56 (0x38 bytes)
             report[2] = 0x01;
 
-            int activeStage = Math.Clamp(settings.SensorActiveDpiStage, 1, 6);
-            report[3] = (byte)(activeStage - 1); // active stage (0-based: 0..5)
-            report[4] = 0x06; // 6 stages total
+            // Byte 3: Angle Snapping (0 = Off, 1 = On) per OEM driver Mouse.exe at 0x4141d5
+            report[3] = (byte)(settings?.SensorAngleSnapping == true ? 1 : 0);
+            // Byte 4: Ripple Control (0 = Off, 1 = On) per OEM driver Mouse.exe at 0x4141df
+            report[4] = (byte)(settings?.SensorRippleControl == true ? 1 : 0);
             report[5] = 0x3F; // stages 1-6 enabled mask (0b00111111)
             report[6] = 0x00;
             report[7] = 0x00;
 
             // Stages 1-6 DPI values translated via PAW3311 register calibration table
-            int[] dpiStages = settings.SensorDpiStages ?? new int[] { 400, 800, 1600, 3200, 6400, 12000 };
+            int[] dpiStages = settings?.SensorDpiStages ?? new int[] { 400, 800, 1600, 3200, 6400, 12000 };
             for (int i = 0; i < 8; i++)
             {
                 if (i < 6 && i < dpiStages.Length)

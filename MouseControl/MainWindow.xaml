@@ -654,8 +654,7 @@
                                         Style="{StaticResource ModernSliderStyle}"
                                         Minimum="100" Maximum="12000" SmallChange="50" LargeChange="200"
                                         Value="800" Margin="0,0,0,14"
-                                        ValueChanged="SliderDpi_ValueChanged"
-                                        PreviewMouseLeftButtonUp="SliderDpi_DragCompleted" />
+                                        ValueChanged="SliderDpi_ValueChanged" />
 
                                 <!-- Fast Preset Chips -->
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -671,188 +670,40 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Polling Rate Card -->
-                        <Border Background="{DynamicResource CardBackgroundBrush}"
-                                BorderBrush="{DynamicResource CardBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="10"
-                                Margin="0,10,0,0"
-                                Padding="16,14">
-                            <StackPanel>
-                                <TextBlock Text="Частота опроса порта (Polling Rate)"
-                                           FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           Margin="0,0,0,4" />
-                                <TextBlock Text="Скорость передачи координат движения мыши в Windows:"
-                                           FontSize="12"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                           Margin="0,0,0,14" />
-
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-
-                                    <RadioButton x:Name="RadioRate125" Grid.Column="0"
-                                                 GroupName="PollingRateGroup"
-                                                 Style="{StaticResource ModernRadioButtonStyle}"
-                                                 Content="125 Гц (8 мс)"
-                                                 Checked="RadioRate_Checked" />
-
-                                    <RadioButton x:Name="RadioRate250" Grid.Column="1"
-                                                 GroupName="PollingRateGroup"
-                                                 Style="{StaticResource ModernRadioButtonStyle}"
-                                                 Content="250 Гц (4 мс)"
-                                                 Checked="RadioRate_Checked" />
-
-                                    <RadioButton x:Name="RadioRate500" Grid.Column="2"
-                                                 GroupName="PollingRateGroup"
-                                                 Style="{StaticResource ModernRadioButtonStyle}"
-                                                 Content="500 Гц (2 мс)"
-                                                 Checked="RadioRate_Checked" />
-
-                                    <RadioButton x:Name="RadioRate1000" Grid.Column="3"
-                                                 GroupName="PollingRateGroup"
-                                                 Style="{StaticResource ModernRadioButtonStyle}"
-                                                 Content="1000 Гц (1 мс)"
-                                                 IsChecked="True"
-                                                 Checked="RadioRate_Checked" />
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Lift-Off Distance (LOD) Card -->
-                        <Border Background="{DynamicResource CardBackgroundBrush}"
-                                BorderBrush="{DynamicResource CardBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="10"
-                                Margin="0,10,0,0"
-                                Padding="16,14">
-                            <StackPanel>
-                                <TextBlock Text="Высота отрыва сенсора (LOD)"
-                                           FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           Margin="0,0,0,4" />
-                                <TextBlock Text="Дистанция отключения оптического сенсора при отрыве от ковра:"
-                                           FontSize="12"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                           Margin="0,0,0,14" />
-
-                                <StackPanel>
-                                    <RadioButton x:Name="RadioLod1mm"
-                                                 GroupName="LodGroup"
-                                                 Style="{StaticResource ModernRadioButtonStyle}"
-                                                 Content="1 мм (Низкая — рекомендовано для киберспорта)"
-                                                 IsChecked="True"
-                                                 Margin="0,0,0,10"
-                                                 Checked="RadioLod_Checked" />
-
-                                    <RadioButton x:Name="RadioLod2mm"
-                                                 GroupName="LodGroup"
-                                                 Style="{StaticResource ModernRadioButtonStyle}"
-                                                 Content="2 мм (Высокая — для текстурированных ковров)"
-                                                 Checked="RadioLod_Checked" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Hardware Sensor & Switch Features Card -->
-                        <Border Background="{DynamicResource CardBackgroundBrush}"
-                                BorderBrush="{DynamicResource CardBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="10"
-                                Margin="0,10,0,0"
-                                Padding="16,14">
-                            <StackPanel>
-                                <TextBlock Text="Аппаратные оптимизации PixArt PAW3311"
-                                           FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           Margin="0,0,0,14" />
-
-                                <!-- Sensor Key Debounce -->
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Время отклика переключателей (Debounce):"
-                                               FontSize="13" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource TextPrimaryBrush}" />
-                                    <TextBlock x:Name="TxtSensorDebounceVal" Grid.Column="1"
-                                               Text="4 мс" FontSize="14" FontWeight="Bold"
-                                               Foreground="{DynamicResource AccentColorBrush}" />
-                                </Grid>
-                                <Slider x:Name="SliderSensorDebounce"
-                                        Style="{StaticResource ModernSliderStyle}"
-                                        Minimum="2" Maximum="20" SmallChange="1" LargeChange="2"
-                                        Value="4" Margin="0,0,0,6"
-                                        ValueChanged="SliderSensorDebounce_ValueChanged" />
-                                <TextBlock Text="Аппаратная фильтрация контактов переключателей Huano Blue Shell без задержки первого клика."
-                                           FontSize="12" Margin="0,0,0,16" TextWrapping="Wrap"
-                                           Foreground="{DynamicResource TextSecondaryBrush}" />
-
-                                <!-- Motion Sync -->
-                                <CheckBox x:Name="ChkMotionSync"
-                                          Style="{StaticResource ModernToggleSwitchStyle}"
-                                          Content="Motion Sync (Синхронизация с опросом USB)"
-                                          Margin="0,0,0,4"
-                                          Checked="SensorFeature_Changed" Unchecked="SensorFeature_Changed" />
-                                <TextBlock Text="Синхронизирует считывание сенсора с пакетами USB. Максимальная плавность прицеливания на мониторах 144–360 Гц."
-                                           FontSize="12" Margin="0,0,0,14" TextWrapping="Wrap"
-                                           Foreground="{DynamicResource TextSecondaryBrush}" />
-
-                                <!-- Ripple Control -->
-                                <CheckBox x:Name="ChkRippleControl"
-                                          Style="{StaticResource ModernToggleSwitchStyle}"
-                                          Content="Ripple Control (Анти-джиттер сглаживание)"
-                                          Margin="0,0,0,4"
-                                          Checked="SensorFeature_Changed" Unchecked="SensorFeature_Changed" />
-                                <TextBlock Text="Стабилизирует трекинг на значениях выше 3200 DPI, устраняя паразитное дрожание руки."
-                                           FontSize="12" Margin="0,0,0,14" TextWrapping="Wrap"
-                                           Foreground="{DynamicResource TextSecondaryBrush}" />
-
-                                <!-- Angle Snapping -->
-                                <CheckBox x:Name="ChkAngleSnapping"
-                                          Style="{StaticResource ModernToggleSwitchStyle}"
-                                          Content="Angle Snapping (Угловая привязка к осям)"
-                                          Margin="0,0,0,4"
-                                          Checked="SensorFeature_Changed" Unchecked="SensorFeature_Changed" />
-                                <TextBlock Text="Выравнивает движение по осям X/Y. Полезно для графики и черчения, рекомендуется отключить для шутеров."
-                                           FontSize="12" Margin="0,0,0,0" TextWrapping="Wrap"
-                                           Foreground="{DynamicResource TextSecondaryBrush}" />
-                            </StackPanel>
-                        </Border>
-
                         <!-- Action Bar Card -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 BorderBrush="{DynamicResource CardBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="10"
-                                Margin="0,10,0,0"
+                                Margin="0,14,0,0"
                                 Padding="16,14">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <StackPanel VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,14,0">
                                     <TextBlock x:Name="TxtSensorApplyStatus"
-                                               Text="Все настройки сенсора синхронизированы"
+                                               Text="Нажмите «Применить в мышь» для сохранения изменений DPI"
                                                FontSize="13" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextPrimaryBrush}" />
-                                    <TextBlock Text="Параметры сохраняются в локальном профиле мыши."
-                                               FontSize="12" Margin="0,2,0,0"
+                                    <TextBlock Text="Все 6 ступеней DPI и заводские цвета прошиваются во внутреннюю память мыши."
+                                               FontSize="12" Margin="0,3,0,0"
                                                Foreground="{DynamicResource TextSecondaryBrush}" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button Style="{StaticResource ModernButtonStyle}"
                                             Content="Сброс к заводским"
-                                            Padding="12,5"
-                                            ToolTip="Сбросить память мыши IO Nova SE к заводским настройкам (Report 12)"
+                                            Padding="12,8"
+                                            Margin="0,0,8,0"
+                                            ToolTip="Сбросить память мыши к заводским настройкам (400-12000 DPI)"
                                             Click="BtnResetSensorDefaults_Click" />
+                                    <Button x:Name="BtnApplySensor"
+                                            Style="{StaticResource AccentButtonStyle}"
+                                            Content="💾 Применить в мышь"
+                                            Padding="16,8"
+                                            ToolTip="Записать настроенные ступени DPI в микроконтроллер мыши"
+                                            Click="BtnApplySensor_Click" />
                                 </StackPanel>
                             </Grid>
                         </Border>
