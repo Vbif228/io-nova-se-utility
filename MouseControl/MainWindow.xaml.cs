@@ -240,6 +240,9 @@ namespace MouseControl
             }
         }
 
+        private int _lastUiBatteryPercent = -1;
+        private int _uiGlitchConfirmCount = 0;
+
         public void UpdateBatteryDisplay(int percentage, bool isCharging, bool isConnected, bool isWired)
         {
             if (!isConnected)
@@ -257,6 +260,22 @@ namespace MouseControl
                 SetBatteryFill(0, mutedBrush);
                 return;
             }
+
+            // Glitch debounce: if battery abruptly drops from high (>30%) to <= 10%, suppress single-packet anomaly
+            if (!isWired && !isCharging && _lastUiBatteryPercent > 30 && percentage <= 10 && percentage > 0)
+            {
+                _uiGlitchConfirmCount++;
+                if (_uiGlitchConfirmCount < 2)
+                {
+                    percentage = _lastUiBatteryPercent;
+                }
+            }
+            else
+            {
+                _uiGlitchConfirmCount = 0;
+            }
+
+            _lastUiBatteryPercent = percentage;
 
             int displayPercent = Math.Clamp(percentage, 0, 100);
             TxtBatteryPercent.Text = $"{displayPercent}%";

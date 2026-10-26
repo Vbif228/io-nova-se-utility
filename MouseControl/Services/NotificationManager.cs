@@ -19,6 +19,7 @@ namespace MouseControl.Services
         private bool _warnedFullCharge = false;
         private int _lastValidBattery = -1;
         private int _consecutiveLowReports = 0;
+        private long _firstLowReportTick = 0;
 
         public NotificationManager(AppSettings settings)
         {
@@ -74,12 +75,17 @@ namespace MouseControl.Services
                 _warnedFullCharge = false;
 
                 // Glitch filter: If previous reading was high/healthy (>30%) and drops abruptly to <= threshold,
-                // require 2 consecutive reports before triggering balloon/sound alert to avoid single-packet wakeup glitches.
+                // require consecutive reports and sustained duration before triggering balloon/sound alert to avoid single-packet glitches (e.g. 0x64 dropping to 0x04).
                 bool isSuddenDrop = (_lastValidBattery > 30 && percentage <= _settings.BatteryWarningThreshold1);
                 if (isSuddenDrop)
                 {
                     _consecutiveLowReports++;
-                    if (_consecutiveLowReports < 2)
+                    if (_firstLowReportTick == 0)
+                    {
+                        _firstLowReportTick = Environment.TickCount64;
+                    }
+
+                    if (_consecutiveLowReports < 2 || (Environment.TickCount64 - _firstLowReportTick) < 1500)
                     {
                         return; // Await confirmation
                     }
@@ -87,6 +93,7 @@ namespace MouseControl.Services
                 else
                 {
                     _consecutiveLowReports = 0;
+                    _firstLowReportTick = 0;
                 }
 
                 _lastValidBattery = percentage;
