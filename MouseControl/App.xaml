@@ -295,32 +295,30 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Grid Width="18" Height="18" Margin="0,0,10,0" UseLayoutRounding="True" SnapsToDevicePixels="True">
-                                <Ellipse x:Name="OuterCircle"
-                                         Width="18" Height="18"
-                                         HorizontalAlignment="Center"
-                                         VerticalAlignment="Center"
-                                         Stroke="{DynamicResource CardBorderBrush}"
-                                         StrokeThickness="2"
-                                         Fill="{DynamicResource HeaderBackgroundBrush}"
-                                         SnapsToDevicePixels="True" />
-                                <Ellipse x:Name="InnerDot"
-                                         Width="8" Height="8"
-                                         HorizontalAlignment="Center"
-                                         VerticalAlignment="Center"
-                                         Fill="{DynamicResource AccentColorBrush}"
-                                         Visibility="Collapsed"
-                                         SnapsToDevicePixels="True" />
+                            <Grid Width="18" Height="18" Margin="0,0,10,0" SnapsToDevicePixels="True">
+                                <Border x:Name="OuterCircle"
+                                        Width="18" Height="18"
+                                        CornerRadius="9"
+                                        BorderBrush="{DynamicResource CardBorderBrush}"
+                                        BorderThickness="2"
+                                        Background="{DynamicResource HeaderBackgroundBrush}">
+                                    <Ellipse x:Name="InnerDot"
+                                             Width="8" Height="8"
+                                             HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Fill="{DynamicResource AccentColorBrush}"
+                                             Visibility="Collapsed" />
+                                </Border>
                             </Grid>
                             <ContentPresenter VerticalAlignment="Center" />
                         </StackPanel>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="OuterCircle" Property="Stroke" Value="{DynamicResource AccentColorBrush}" />
+                                <Setter TargetName="OuterCircle" Property="BorderBrush" Value="{DynamicResource AccentColorBrush}" />
                                 <Setter TargetName="InnerDot" Property="Visibility" Value="Visible" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="OuterCircle" Property="Stroke" Value="{DynamicResource TextSecondaryBrush}" />
+                                <Setter TargetName="OuterCircle" Property="BorderBrush" Value="{DynamicResource TextSecondaryBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

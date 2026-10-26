@@ -18,6 +18,7 @@ namespace MouseControl
         private Button _activeTabButton = null!;
         private int _selectedDpiStage = 2;
         private bool _isUpdatingDpiUi = false;
+        private readonly System.Windows.Threading.DispatcherTimer _dpiDebounceTimer;
 
         private static void Log(string msg)
         {
@@ -104,6 +105,16 @@ namespace MouseControl
             }
 
             KeyDown += MainWindow_KeyDown;
+
+            _dpiDebounceTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(400)
+            };
+            _dpiDebounceTimer.Tick += (s, e) =>
+            {
+                _dpiDebounceTimer.Stop();
+                ApplySensorSettingsHardware();
+            };
         }
 
         private void LoadSettingsIntoUi()
@@ -616,7 +627,7 @@ namespace MouseControl
         private void UpdateDpiStagesDisplay()
         {
             if (_settings.SensorDpiStages == null || _settings.SensorDpiStages.Length != 6)
-                _settings.SensorDpiStages = new int[] { 400, 800, 1600, 2400, 3200, 6400 };
+                _settings.SensorDpiStages = new int[] { 400, 800, 1600, 3200, 6400, 12000 };
 
             TxtStageDpi1.Text = _settings.SensorDpiStages[0].ToString();
             TxtStageDpi2.Text = _settings.SensorDpiStages[1].ToString();
@@ -624,6 +635,20 @@ namespace MouseControl
             TxtStageDpi4.Text = _settings.SensorDpiStages[3].ToString();
             TxtStageDpi5.Text = _settings.SensorDpiStages[4].ToString();
             TxtStageDpi6.Text = _settings.SensorDpiStages[5].ToString();
+
+            try
+            {
+                if (_settings.SensorDpiColors != null && _settings.SensorDpiColors.Length == 6)
+                {
+                    DotStage1.Fill = (Brush)new BrushConverter().ConvertFromString(_settings.SensorDpiColors[0])!;
+                    DotStage2.Fill = (Brush)new BrushConverter().ConvertFromString(_settings.SensorDpiColors[1])!;
+                    DotStage3.Fill = (Brush)new BrushConverter().ConvertFromString(_settings.SensorDpiColors[2])!;
+                    DotStage4.Fill = (Brush)new BrushConverter().ConvertFromString(_settings.SensorDpiColors[3])!;
+                    DotStage5.Fill = (Brush)new BrushConverter().ConvertFromString(_settings.SensorDpiColors[4])!;
+                    DotStage6.Fill = (Brush)new BrushConverter().ConvertFromString(_settings.SensorDpiColors[5])!;
+                }
+            }
+            catch { }
 
             void HighlightCard(Border card, int stageNum)
             {
@@ -693,20 +718,17 @@ namespace MouseControl
             {
                 _selectedDpiStage = stage;
                 _settings.SensorActiveDpiStage = stage;
-                _settings.Save();
                 UpdateDpiStagesDisplay();
 
                 int activeDpi = (_settings.SensorDpiStages != null && stage <= _settings.SensorDpiStages.Length)
                     ? _settings.SensorDpiStages[stage - 1]
                     : 800;
 
-                var driver = ((App)Application.Current).MouseDriver;
-                bool hwSent = driver?.SendActiveDpiStage(stage, _settings) == true;
-
-                TxtSensorApplyStatus.Text = hwSent
-                    ? $"✓ Мышь переключена: Ступень {stage} ({activeDpi} DPI)"
-                    : $"✓ Активна ступень {stage} ({activeDpi} DPI)";
+                TxtSensorApplyStatus.Text = $"Ступень {stage} ({activeDpi} DPI)...";
                 TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
+
+                _dpiDebounceTimer.Stop();
+                _dpiDebounceTimer.Start();
             }
         }
 
@@ -735,13 +757,36 @@ namespace MouseControl
             {
                 TxtActiveDpiSummary.Text = $"Ступень {_selectedDpiStage}: {dpi} DPI";
             }
+
+            _dpiDebounceTimer.Stop();
+            _dpiDebounceTimer.Start();
+        }
+
+        private void ApplySensorSettingsHardware()
+        {
+            _settings.Save();
+            var driver = ((App)Application.Current).MouseDriver;
+            if (driver != null)
+            {
+                bool hwSent = driver.SendSensorConfiguration(_settings);
+                Dispatcher.Invoke(() =>
+                {
+                    int activeDpi = (_settings.SensorDpiStages != null && _settings.SensorActiveDpiStage <= _settings.SensorDpiStages.Length)
+                        ? _settings.SensorDpiStages[_settings.SensorActiveDpiStage - 1]
+                        : 800;
+
+                    TxtSensorApplyStatus.Text = hwSent
+                        ? $"✓ Настройки сенсора применены: Ступень {_settings.SensorActiveDpiStage} ({activeDpi} DPI)"
+                        : "✓ Настройки сохранены";
+                    TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
+                });
+            }
         }
 
         private void SliderDpi_DragCompleted(object sender, MouseButtonEventArgs e)
         {
-            _settings.Save();
-            var driver = ((App)Application.Current).MouseDriver;
-            driver?.SendSensorConfiguration(_settings);
+            _dpiDebounceTimer.Stop();
+            ApplySensorSettingsHardware();
         }
 
         private void BtnDpiPreset_Click(object sender, RoutedEventArgs e)
@@ -749,9 +794,8 @@ namespace MouseControl
             if (sender is Button btn && btn.Tag != null && int.TryParse(btn.Tag.ToString(), out int presetDpi))
             {
                 SliderDpi.Value = presetDpi;
-                _settings.Save();
-                var driver = ((App)Application.Current).MouseDriver;
-                driver?.SendSensorConfiguration(_settings);
+                _dpiDebounceTimer.Stop();
+                _dpiDebounceTimer.Start();
             }
         }
 
@@ -763,20 +807,18 @@ namespace MouseControl
             else if (RadioRate500.IsChecked == true) _settings.SensorPollingRate = 500;
             else if (RadioRate1000.IsChecked == true) _settings.SensorPollingRate = 1000;
 
-            _settings.Save();
-            TxtSensorApplyStatus.Text = $"Частота опроса: {_settings.SensorPollingRate} Гц";
-            var driver = ((App)Application.Current).MouseDriver;
-            driver?.SendSensorConfiguration(_settings);
+            TxtSensorApplyStatus.Text = $"Частота опроса: {_settings.SensorPollingRate} Гц...";
+            _dpiDebounceTimer.Stop();
+            _dpiDebounceTimer.Start();
         }
 
         private void RadioLod_Checked(object sender, RoutedEventArgs e)
         {
             if (!IsLoaded) return;
             _settings.SensorLod = RadioLod2mm.IsChecked == true ? "2mm" : "1mm";
-            _settings.Save();
-            TxtSensorApplyStatus.Text = $"Высота отрыва (LOD): {_settings.SensorLod}";
-            var driver = ((App)Application.Current).MouseDriver;
-            driver?.SendSensorConfiguration(_settings);
+            TxtSensorApplyStatus.Text = $"Высота отрыва (LOD): {_settings.SensorLod}...";
+            _dpiDebounceTimer.Stop();
+            _dpiDebounceTimer.Start();
         }
 
         private void SliderSensorDebounce_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -785,7 +827,8 @@ namespace MouseControl
             int ms = (int)SliderSensorDebounce.Value;
             TxtSensorDebounceVal.Text = $"{ms} мс";
             _settings.SensorKeyDebounceMs = ms;
-            _settings.Save();
+            _dpiDebounceTimer.Stop();
+            _dpiDebounceTimer.Start();
         }
 
         private void SensorFeature_Changed(object sender, RoutedEventArgs e)
@@ -794,62 +837,47 @@ namespace MouseControl
             _settings.SensorMotionSync = ChkMotionSync.IsChecked == true;
             _settings.SensorRippleControl = ChkRippleControl.IsChecked == true;
             _settings.SensorAngleSnapping = ChkAngleSnapping.IsChecked == true;
-            _settings.Save();
-            var driver = ((App)Application.Current).MouseDriver;
-            driver?.SendSensorConfiguration(_settings);
+            _dpiDebounceTimer.Stop();
+            _dpiDebounceTimer.Start();
         }
 
         private void BtnApplySensor_Click(object sender, RoutedEventArgs e)
         {
-            _settings.Save();
-            var driver = ((App)Application.Current).MouseDriver;
-            bool hwSent = driver?.SendSensorConfiguration(_settings) == true;
-
-            TxtSensorApplyStatus.Text = hwSent
-                ? "✓ Все параметры сенсора успешно отправлены в мышь!"
-                : "✓ Все параметры сенсора сохранены!";
-            TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
-
-            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2.5) };
-            timer.Tick += (s, ev) =>
-            {
-                timer.Stop();
-                TxtSensorApplyStatus.Text = "Все настройки сенсора синхронизированы";
-                TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "TextPrimaryBrush");
-            };
-            timer.Start();
+            _dpiDebounceTimer.Stop();
+            ApplySensorSettingsHardware();
         }
 
         private void BtnResetSensorDefaults_Click(object sender, RoutedEventArgs e)
         {
-            _settings.SensorDpiStages = new int[] { 400, 800, 1600, 2400, 3200, 6400 };
-            _settings.SensorDpiColors = new string[] { "#EF4444", "#10B981", "#3B82F6", "#EAB308", "#06B6D4", "#A855F7" };
-            _settings.SensorActiveDpiStage = 2; // 800 DPI
-            _settings.SensorPollingRate = 1000;
-            _settings.SensorLod = "1mm";
-            _settings.SensorKeyDebounceMs = 4;
-            _settings.SensorMotionSync = true;
-            _settings.SensorRippleControl = false;
-            _settings.SensorAngleSnapping = false;
-            _settings.Save();
+            var res = MessageBox.Show(
+                "Выполнить полный заводской сброс мыши IO Nova SE?\n\nВсе 6 ступеней DPI (400..12000) и заводские цвета будут отправлены в микроконтроллер мыши.",
+                "Заводской сброс мыши",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
 
-            _selectedDpiStage = 2;
-            UpdateDpiStagesDisplay();
+            if (res == MessageBoxResult.Yes)
+            {
+                _settings.SensorDpiStages = new int[] { 400, 800, 1600, 3200, 6400, 12000 };
+                _settings.SensorDpiColors = new string[] { "#FFFF00", "#FF0000", "#00FF00", "#0000FF", "#00FFFF", "#FF00FF" };
+                _settings.SensorActiveDpiStage = 1;
+                _settings.SensorPollingRate = 1000;
+                _settings.SensorLod = "1mm";
+                _settings.Save();
 
-            RadioRate1000.IsChecked = true;
-            RadioLod1mm.IsChecked = true;
-            SliderSensorDebounce.Value = 4;
-            TxtSensorDebounceVal.Text = "4 мс";
-            ChkMotionSync.IsChecked = true;
-            ChkRippleControl.IsChecked = false;
-            ChkAngleSnapping.IsChecked = false;
+                var driver = ((App)Application.Current).MouseDriver;
+                bool ok = driver?.SendFactoryReset(_settings) == true;
 
-            var driver = ((App)Application.Current).MouseDriver;
-            driver?.SendSensorConfiguration(_settings);
+                LoadSettingsIntoUi();
+                UpdateDpiStagesDisplay();
 
-            TxtSensorApplyStatus.Text = "✓ Восстановлены и отправлены в мышь заводские параметры (800 DPI, 1000 Гц, 1 мм)";
-            TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
+                TxtSensorApplyStatus.Text = ok
+                    ? "✓ Заводские настройки мыши успешно восстановлены!"
+                    : "✓ Заводские настройки применены локально";
+                TxtSensorApplyStatus.SetResourceReference(TextBlock.ForegroundProperty, "AccentColorBrush");
+            }
         }
+
+
 
         #endregion
     }

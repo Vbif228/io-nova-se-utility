@@ -283,8 +283,8 @@ namespace MouseControl.Tests
             Assert.Equal(0x8D, report[13]);
             Assert.Equal(0x01, report[21]);
 
-            // Active stage 1-based at byte 24:
-            Assert.Equal(2, report[24]);
+            // Profile index in byte 24 (Profile 1 = 0x01 per Mouse.exe at 0x4142c8):
+            Assert.Equal(1, report[24]);
 
             // Stage colors in bytes 25..48 (Stage 1: #EF4444 -> 0xEF, 0x44, 0x44)
             Assert.Equal(0xEF, report[25]);

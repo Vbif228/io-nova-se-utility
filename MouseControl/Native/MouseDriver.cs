@@ -654,12 +654,12 @@ namespace MouseControl.Native
 
             return stageIndex switch
             {
-                0 => (0xEF, 0x44, 0x44), // Stage 1: Red
-                1 => (0x10, 0xB9, 0x81), // Stage 2: Green
-                2 => (0x3B, 0x82, 0xF6), // Stage 3: Blue
-                3 => (0xEA, 0xB3, 0x08), // Stage 4: Yellow
-                4 => (0x06, 0xB6, 0xD4), // Stage 5: Cyan
-                5 => (0xA8, 0x55, 0xF7), // Stage 6: Magenta/Purple
+                0 => (0xFF, 0xFF, 0x00), // Stage 1: Yellow (#FFFF00)
+                1 => (0xFF, 0x00, 0x00), // Stage 2: Red (#FF0000)
+                2 => (0x00, 0xFF, 0x00), // Stage 3: Green (#00FF00)
+                3 => (0x00, 0x00, 0xFF), // Stage 4: Blue (#0000FF)
+                4 => (0x00, 0xFF, 0xFF), // Stage 5: Cyan (#00FFFF)
+                5 => (0xFF, 0x00, 0xFF), // Stage 6: Magenta/Purple (#FF00FF)
                 6 => (0xFF, 0x80, 0x00), // Stage 7: Orange
                 7 => (0xFF, 0xFF, 0xFF), // Stage 8: White
                 _ => (0xFF, 0xFF, 0xFF)
@@ -681,7 +681,7 @@ namespace MouseControl.Native
             report[7] = 0x00;
 
             // Stages 1-6 DPI values translated via PAW3311 register calibration table
-            int[] dpiStages = settings.SensorDpiStages ?? new int[] { 400, 800, 1600, 2400, 3200, 6400 };
+            int[] dpiStages = settings.SensorDpiStages ?? new int[] { 400, 800, 1600, 3200, 6400, 12000 };
             for (int i = 0; i < 8; i++)
             {
                 if (i < 6 && i < dpiStages.Length)
@@ -699,8 +699,8 @@ namespace MouseControl.Native
                 }
             }
 
-            // Byte 24: Active stage index (1-based: 1..6)
-            report[24] = (byte)activeStage;
+            // Byte 24: Profile index in OEM driver (Mouse.exe 0x4142c8: Profile 1 = 0x01)
+            report[24] = 0x01;
 
             // Bytes 25..48: 8 RGB color sets (3 bytes each * 8 stages = 24 bytes)
             for (int i = 0; i < 8; i++)
@@ -743,6 +743,59 @@ namespace MouseControl.Native
             report[4] = (byte)(~interval);
 
             return report;
+        }
+
+        public bool SendFactoryReset(AppSettings? settings = null)
+        {
+            if (_setFeature == null || _openFeature == null || _closeFeature == null)
+                return false;
+
+            lock (_featureLock)
+            {
+                try
+                {
+                    bool wired;
+                    lock (_stateLock) { wired = _isWired; }
+                    _setVidPid?.Invoke(0x1D57, wired ? 0x2015 : 0xFA60);
+
+                    if (_openFeature() == 0) return false;
+
+                    // Report 12 (0x0C): Factory reset / profile erase packet
+                    byte[] resetReport = new byte[] { 0x0C, 0x0A, 0x01, 0xFE, 0x01, 0xFE, 0x00, 0x00, 0x00, 0x00 };
+                    IntPtr pReset = Marshal.AllocHGlobal(resetReport.Length);
+                    try
+                    {
+                        Marshal.Copy(resetReport, 0, pReset, resetReport.Length);
+                        _setFeature(pReset, resetReport.Length);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(pReset);
+                    }
+
+                    Thread.Sleep(500);
+
+                    var cfg = settings ?? new AppSettings();
+                    byte[] sensorReport = BuildSensorReport(cfg);
+                    IntPtr pSensor = Marshal.AllocHGlobal(sensorReport.Length);
+                    try
+                    {
+                        Marshal.Copy(sensorReport, 0, pSensor, sensorReport.Length);
+                        int res = _setFeature(pSensor, sensorReport.Length);
+                        Thread.Sleep(500);
+                        return res != 0;
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(pSensor);
+                        _closeFeature();
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+            }
         }
 
         public bool SendActiveDpiStage(int stage, AppSettings? settings = null)
